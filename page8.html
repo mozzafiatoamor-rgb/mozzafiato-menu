@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tisanas & Bebidas Frías — Mozzafiato</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .tisana-cols { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+    .tisana-col-title { font-family:'Great Vibes',cursive; font-size:1.8rem; color:var(--gold-dark); text-align:center; border-bottom:1px solid rgba(139,122,82,.25); padding-bottom:6px; margin-bottom:12px; }
+    .tisana-price { font-size:.75rem; letter-spacing:.12em; color:var(--gold); text-align:center; margin-bottom:12px; }
+    .bev-fria-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px 32px; }
+    .bev-item { display:flex; justify-content:space-between; font-size:.87rem; padding:4px 0; border-bottom:1px dashed rgba(139,122,82,.15); }
+    @media(max-width:700px){
+      .tisana-cols,.bev-fria-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+  <button class="hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
+    </div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="page1.html">Desayunos</a>
+      <a href="page2.html">Ensaladas & Platillos</a>
+      <a href="page3.html">Chapatas & Hamburguesas</a>
+      <a href="page4.html">Sandwiches, Waffles & Crepas</a>
+      <a href="page5.html">Pastas & Lasagna</a>
+      <a href="page6.html">Waffles Dulces & Postres</a>
+      <a href="page7.html">Bebidas Calientes</a>
+      <a href="page8.html">Tisanas & Bebidas Frías</a>
+      <a href="page9.html">Frappes & Smoothies</a>
+      <a href="page10.html">Complementos & Extras</a>
+    </nav>
+    <div class="sidebar-footer">Andador 65 × calle 66 y 68<br>Felipe Carrillo Puerto, Q. Roo<br>998 408 8897</div>
+  </aside>
+
+  <div class="main">
+    <header class="page-header">
+      <img class="header-logo" src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
+      <h1 class="page-title">Tisanas & Bebidas Frías</h1>
+    </header>
+
+    <div class="content">
+
+      <!-- TISANAS con imágenes -->
+      <div class="dish-illustrated" style="margin-bottom:0">
+        <div class="food-img-wrap" style="max-width:220px;margin:0 auto 10px;">
+          <img src="images/19.png" alt="Guayaba Tisana">
+        </div>
+        <div class="food-img-wrap" style="max-width:220px;margin:0 auto 10px;">
+          <img src="images/20.png" alt="Mix frutos Tisana">
+        </div>
+      </div>
+
+      <div class="section-block" style="margin-top:20px">
+        <h2 class="section-heading">Tisanas <span style="font-size:.85rem;font-style:italic;font-weight:300;color:var(--gold)">(preguntar por disponibilidad)</span></h2>
+
+        <!-- 3 TIPOS CON PRECIOS -->
+        <div class="tisana-cols" style="margin-bottom:28px">
+          <div style="text-align:center;padding:16px 12px;border:1px solid rgba(139,122,82,.25);background:rgba(139,122,82,.05)">
+            <div class="tisana-col-title">Calientes</div>
+            <div class="tisana-price" style="font-size:1.1rem;font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--gold-dark);letter-spacing:.05em">$99</div>
+          </div>
+          <div style="text-align:center;padding:16px 12px;border:1px solid rgba(139,122,82,.25);background:rgba(139,122,82,.08)">
+            <div class="tisana-col-title">Frías</div>
+            <div class="tisana-price" style="font-size:1.1rem;font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--gold-dark);letter-spacing:.05em">$105</div>
+          </div>
+          <div style="text-align:center;padding:16px 12px;border:1px solid rgba(139,122,82,.25);background:rgba(139,122,82,.05)">
+            <div class="tisana-col-title">Smoothies</div>
+            <div class="tisana-price" style="font-size:1.1rem;font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--gold-dark);letter-spacing:.05em">$115</div>
+          </div>
+        </div>
+
+        <!-- SABORES (aplican para los 3 tipos) -->
+        <p class="dish-desc" style="font-style:italic;margin-bottom:18px;color:var(--gold)">Todos los sabores disponibles en las tres presentaciones:</p>
+        <div class="grid-2" style="gap:14px 48px;">
+          <div class="dish-card">
+            <span class="dish-name bold-title">Manzana almendras</span>
+            <p class="dish-desc">Manzana, almendra, uva pasa, naranja, tila, canela y especias.</p>
+          </div>
+          <div class="dish-card">
+            <span class="dish-name bold-title">Pétalos de rosas</span>
+            <p class="dish-desc">Frambuesa, cereza, arándano, fresa, manzana y pétalos de rosas.</p>
+          </div>
+          <div class="dish-card">
+            <span class="dish-name bold-title">Ponche de guayaba</span>
+            <p class="dish-desc">Guayaba, manzana, uva pasa, flor de Jamaica, tejocote y canela.</p>
+          </div>
+          <div class="dish-card">
+            <span class="dish-name bold-title">Moras del bosque</span>
+            <p class="dish-desc">Pasa de Corinto, flor de Jamaica, pasa sultana, escaramujo (rosa mosqueta), betabel, manzana, fresa y saborizante natural de zarzamora y frambuesa.</p>
+          </div>
+          <div class="dish-card">
+            <span class="dish-name bold-title">Fresa Kiwi</span>
+            <p class="dish-desc">Manzana, flor de Jamaica, escaramujo (rosa mosqueta), cáscara de naranja, grosella negra, gránulos de fresa, kiwi y saborizante natural de fresa y kiwi.</p>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- TÉS EXÓTICOS FRÍOS -->
+      <div class="dish-illustrated reverse">
+        <div class="section-block">
+          <h2 class="section-heading">Tés Exóticos Fríos <span style="font-size:1rem;color:var(--gold);font-style:italic">99</span></h2>
+          <div class="grid-2" style="gap:14px 32px;margin-top:12px">
+            <div class="dish-card"><span class="dish-name bold-title">Yin Yang Tónic</span><p class="dish-desc">Té blanco, té negro, te de durazno, hierbabuena y menta. Con miel de abeja y limón.</p></div>
+            <div class="dish-card"><span class="dish-name bold-title">Fusion Herbal</span><p class="dish-desc">Té de manzanilla, hinojo y aloe vera. Con miel de abeja y limón.</p></div>
+            <div class="dish-card"><span class="dish-name bold-title">Detóx</span><p class="dish-desc">Té de jengibre y lavanda. Con miel de abeja y limón.</p></div>
+            <div class="dish-card"><span class="dish-name bold-title">Oriental</span><p class="dish-desc">Sencha y matcha. Con miel de abeja y limón.</p></div>
+            <div class="dish-card"><span class="dish-name bold-title">Arizona</span><p class="dish-desc">Té de manzanilla, té de lavanda y mango.</p></div>
+          </div>
+        </div>
+        <div class="food-img-wrap" style="max-width:280px;margin:0 auto;">
+          <img src="images/21.png" alt="Bebidas frías Mozzafiato">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- BEBIDAS FRÍAS -->
+      <div class="section-block">
+        <h2 class="section-heading">Bebidas Frías</h2>
+        <div class="bev-fria-grid">
+          <div>
+            <p class="dish-desc" style="font-style:italic;margin-bottom:8px">Con agua natural <strong>79</strong></p>
+            <div class="bev-item"><span>Fresada</span></div>
+            <div class="bev-item"><span>Zarzamora</span></div>
+            <div class="bev-item"><span>Frutos Rojos</span></div>
+            <div class="bev-item"><span>Maracuya</span></div>
+            <div class="bev-item"><span>Tamarindo</span></div>
+            <div class="bev-item"><span>Naranjada</span></div>
+            <div class="bev-item"><span>Mango</span></div>
+            <p class="dish-desc" style="font-style:italic;margin:10px 0 8px">Con agua mineral <strong>89</strong></p>
+          </div>
+          <div>
+            <div class="bev-item"><span>Jugo de naranja</span><strong>89</strong></div>
+            <div class="bev-item"><span>Limonada natural</span><strong>69</strong></div>
+            <div class="bev-item"><span>Limonada mineral</span><strong>79</strong></div>
+            <div class="bev-item"><span>Horchata de crema de coco</span><strong>79</strong></div>
+          </div>
+          <div>
+            <div class="bev-item"><span>Coca Cola 500 ml</span><strong>69</strong></div>
+            <div class="bev-item"><span>Topo Chico</span><strong>69</strong></div>
+            <div class="bev-item"><span>Agua embotellada 500 ml</span><strong>45</strong></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      El Placer del Buen Café<br>
+      Andador 65 × calle 66 y 68 Felipe Carrillo Puerto, Quintana Roo &nbsp;·&nbsp;
+      <a href="tel:9984088897">998 408 8897</a> &nbsp;·&nbsp; CP 77200
+    </footer>
+  </div>
+
+  <a class="wa-btn" href="https://wa.me/529984088897" target="_blank" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+  </a>
+  <div class="lightbox" id="lightbox"><img id="lb-img" src="" alt=""></div>
+  <script src="menu.js"></script>
+</body>
+</html>
