@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Frappes & Smoothies — Mozzafiato</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .simple-list { list-style:none; }
+    .simple-list li { font-size:.88rem; color:var(--text-soft); padding:3px 0; border-bottom:1px dashed rgba(139,122,82,.15); }
+    .bev-price-note { font-family:'Playfair Display',Georgia,serif; font-style:italic; font-size:1.05rem; color:var(--gold); margin-bottom:10px; display:block; }
+    .bev-col-wrap { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+    .espresso-special { background:rgba(139,122,82,.07); border:1px solid rgba(139,122,82,.2); padding:16px 20px; border-radius:2px; margin-bottom:14px; }
+    @media(max-width:600px){.bev-col-wrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <button class="hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+  <div class="sidebar-overlay"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
+    </div>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="page1.html">Desayunos</a>
+      <a href="page2.html">Ensaladas & Platillos</a>
+      <a href="page3.html">Chapatas & Hamburguesas</a>
+      <a href="page4.html">Sandwiches, Waffles & Crepas</a>
+      <a href="page5.html">Pastas & Lasagna</a>
+      <a href="page6.html">Waffles Dulces & Postres</a>
+      <a href="page7.html">Bebidas Calientes</a>
+      <a href="page8.html">Tisanas & Bebidas Frías</a>
+      <a href="page9.html">Frappes & Smoothies</a>
+      <a href="page10.html">Complementos & Extras</a>
+    </nav>
+    <div class="sidebar-footer">Andador 65 × calle 66 y 68<br>Felipe Carrillo Puerto, Q. Roo<br>998 408 8897</div>
+  </aside>
+
+  <div class="main">
+    <header class="page-header">
+      <img class="header-logo" src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
+      <h1 class="page-title">Frappes & Smoothies</h1>
+    </header>
+
+    <div class="content">
+
+      <!-- FRAPPES + smoothies top row -->
+      <div class="dish-illustrated">
+        <div>
+          <div class="section-block">
+            <h2 class="section-heading">Frappes</h2>
+            <span class="bev-price-note">Base espresso — 105</span>
+            <ul class="simple-list">
+              <li>Capuccino</li><li>Chocomenta</li><li>Chocomenta con cacahuate</li>
+              <li>Moka</li><li>Cacahuate</li><li>Cajeta</li><li>Crema de avellana</li>
+              <li>Vainilla</li><li>Caramelo</li><li>Queso de bola</li>
+              <li>Licor de café</li><li>Crema irlandesa</li><li>Malvavisco tostado</li>
+              <li>Oreo <em style="color:var(--gold)">(sin cafe)</em></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="food-img-wrap" style="max-width:280px;margin:0 auto;">
+          <img src="images/22.png" alt="Frappe Mozzafiato">
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <!-- SMOOTHIES + LATTES FRIOS -->
+      <div class="bev-col-wrap">
+        <div>
+          <div class="section-block">
+            <h2 class="section-heading">Smoothies <span style="font-size:.9rem;font-style:italic;font-weight:300;color:var(--gold)">sin café</span></h2>
+            <p class="bev-price-note">Base leche — 105</p>
+            <ul class="simple-list" style="columns:2;gap:24px;margin-bottom:16px">
+              <li>Taro</li><li>Fresa cremosa</li><li>Chicle</li><li>Té chai</li>
+              <li>Chocolate Blanco</li><li>Chocolate Oaxaca</li><li>Chocolate Europeo</li><li>Té Matcha</li>
+            </ul>
+            <p class="bev-price-note" style="margin-top:10px">Base agua — 99</p>
+            <ul class="simple-list" style="columns:2;gap:24px;margin-bottom:16px">
+              <li>Mango</li><li>Fresa</li><li>Limón</li><li>Naranja</li>
+              <li>Daiquirí Fresón</li><li>Maracuya</li><li>Tamarindo</li><li>Piña con Coco</li>
+              <li>Zarzamora</li><li>Mix frutos rojos</li>
+            </ul>
+            <div class="dish-card" style="margin-bottom:10px">
+              <span class="dish-name">Smoothie de Baileys</span>
+              <p class="dish-desc">Crema de avellana · Crema de cacahuate · Cajeta</p>
+              <span class="dish-price">115</span>
+            </div>
+            <div class="dish-card">
+              <span class="dish-name">Smoothie de Yogurt</span>
+              <p class="dish-desc">Fresa · Mango · Plátano · Zarzamora · Maracuya · Mix frutos rojos</p>
+              <span class="dish-price">105</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-block">
+            <h2 class="section-heading">Lattes Fríos <span style="font-size:1rem;font-style:italic;color:var(--gold)">95</span></h2>
+            <ul class="simple-list" style="columns:2;gap:24px;margin-bottom:20px">
+              <li>Clásico</li><li>Vainilla</li><li>Moka</li><li>Crema de avellana</li>
+              <li>Cajeta</li><li>Caramelo</li><li>Licor de café</li><li>Cacahuate</li>
+              <li>Té chai <em style="color:var(--gold)">(sin café)</em></li>
+              <li>Té matcha <em style="color:var(--gold)">(sin café)</em></li>
+              <li>Crema irlandesa</li>
+            </ul>
+          </div>
+
+          <!-- ESPECIALES CON ESPRESSO -->
+          <div class="section-block">
+            <h2 class="section-heading">Especiales con Espresso</h2>
+            <div class="food-img-wrap" style="max-width:260px;margin:0 auto 18px;">
+              <img src="images/23.png" alt="Especial con espresso Mozzafiato">
+            </div>
+            <div class="espresso-special">
+              <div class="price-row"><span>Shaker Americano <span class="note">(Endulzados naturalmente)</span></span><strong>89</strong></div>
+              <div class="price-row"><span>Shaker Capuccino</span><strong>99</strong></div>
+              <div class="price-row"><span>Shaker Espresso</span><strong>89</strong></div>
+            </div>
+            <div class="dish-card" style="margin-bottom:12px">
+              <span class="dish-name">Bevanta Energizzante <span class="dish-price" style="font-size:.95rem">99</span></span>
+              <p class="dish-desc">Bebida a base de espresso, agua mineral, limón y miel.</p>
+            </div>
+            <div class="dish-card">
+              <span class="dish-name">Carajillo <span class="dish-price" style="font-size:.95rem">155</span></span>
+              <p class="dish-desc">Bebida a base de espresso, licor 43 y hielo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer>
+      El Placer del Buen Café<br>
+      Andador 65 × calle 66 y 68 Felipe Carrillo Puerto, Quintana Roo &nbsp;·&nbsp;
+      <a href="tel:9984088897">998 408 8897</a> &nbsp;·&nbsp; CP 77200
+    </footer>
+  </div>
+
+  <a class="wa-btn" href="https://wa.me/529984088897" target="_blank" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+  </a>
+  <div class="lightbox" id="lightbox"><img id="lb-img" src="" alt=""></div>
+  <script src="menu.js"></script>
+</body>
+</html>
