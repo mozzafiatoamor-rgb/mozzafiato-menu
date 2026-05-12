@@ -36,14 +36,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const lbImg = document.getElementById('lb-img');
 
   document.querySelectorAll('.food-img-wrap').forEach(wrap => {
+    const illustrationSrc = wrap.querySelector('img').src;
+
+    /* Extract image number from filename e.g. images/6.png → foto_6.jpg */
+    const match = illustrationSrc.match(/\/(\d+)\.(png|jpg)$/i);
+    const realPhotoSrc = match ? illustrationSrc.replace(/\/(\d+)\.(png|jpg)$/i, '/foto_$1.jpg') : null;
+
+    /* Add "ver foto real" label only if a real photo exists for this illustration */
+    if (realPhotoSrc) {
+      const label = document.createElement('div');
+      label.className = 'foto-real-label';
+      label.textContent = 'ver foto real';
+      wrap.appendChild(label);
+
+      /* Test if real photo actually exists before using it */
+      const testImg = new Image();
+      testImg.onload = () => { wrap.dataset.realPhoto = realPhotoSrc; };
+      testImg.onerror = () => { label.remove(); };
+      testImg.src = realPhotoSrc;
+    }
+
     wrap.addEventListener('click', () => {
-      const src = wrap.querySelector('img').src;
+      const src = wrap.dataset.realPhoto || illustrationSrc;
       lbImg.src = src;
       lb.classList.add('open');
     });
   });
 
-  lb?.addEventListener('click', () => lb.classList.remove('open'));
+  lb?.addEventListener('click', () => {
+    lb.classList.remove('open');
+    lbImg.src = '';
+  });
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') lb?.classList.remove('open');

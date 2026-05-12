@@ -324,6 +324,32 @@ body::before {
   filter: sepia(40%) brightness(0.96) contrast(1.12) saturate(0.75);
 }
 
+/* ── FOTO REAL LABEL ── */
+.foto-real-label {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Baskerville', 'Baskerville Old Face', 'Libre Baskerville', Georgia, serif;
+  font-style: italic;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  color: var(--gold);
+  background: rgba(237,232,220,.85);
+  padding: 3px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.food-img-wrap:hover .foto-real-label { opacity: 1; }
+
+/* On touch devices show label always (no hover) */
+@media (hover: none) {
+  .foto-real-label { opacity: .85; }
+}
+
 /* ── LIGHTBOX ── */
 .lightbox {
   display: none;
