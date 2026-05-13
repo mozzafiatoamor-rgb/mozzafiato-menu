@@ -35,14 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const lb    = document.getElementById('lightbox');
   const lbImg = document.getElementById('lb-img');
 
-  /* Real photos map: illustration number → real photo extension */
-  const realPhotoExt = {
-    '1':'png','2':'png','3':'png','4':'png',
-    '5':'jpg','6':'jpg',
-    '12':'png','13':'png','16':'png',
-    '29':'jpg'
-  };
-
   document.querySelectorAll('.food-img-wrap').forEach(wrap => {
     const illustrationSrc = wrap.querySelector('img').src;
 
@@ -51,21 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!match) return;
 
     const num = match[1];
-    const ext = realPhotoExt[num];
-    if (!ext) return; /* no real photo for this illustration */
 
-    const realPhotoSrc = 'images/foto_' + num + '.' + ext;
+    /* Try JPG first, then PNG — add label only when one loads */
+    function tryLoad(ext, fallbackExt) {
+      const src = 'images/foto_' + num + '.' + ext;
+      const testImg = new Image();
+      testImg.onload = () => {
+        wrap.dataset.realPhoto = src;
+        if (!wrap.querySelector('.foto-real-label')) {
+          const label = document.createElement('div');
+          label.className = 'foto-real-label';
+          label.textContent = 'ver foto real';
+          wrap.appendChild(label);
+        }
+      };
+      testImg.onerror = () => {
+        if (fallbackExt) tryLoad(fallbackExt, null);
+      };
+      testImg.src = src;
+    }
 
-    /* Verify the file exists before adding the label */
-    const testImg = new Image();
-    testImg.onload = () => {
-      wrap.dataset.realPhoto = realPhotoSrc;
-      const label = document.createElement('div');
-      label.className = 'foto-real-label';
-      label.textContent = 'ver foto real';
-      wrap.appendChild(label);
-    };
-    testImg.src = realPhotoSrc;
+    tryLoad('jpg', 'png');
 
     wrap.addEventListener('click', () => {
       const src = wrap.dataset.realPhoto || illustrationSrc;
