@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     tryLoad('jpg', 'png');
 
     wrap.addEventListener('click', () => {
-      const src = wrap.dataset.realPhoto || illustrationSrc;
-      lbImg.src = src;
+      if (!wrap.dataset.realPhoto) return;
+      lbImg.src = wrap.dataset.realPhoto;
       lb.classList.add('open');
     });
   });
