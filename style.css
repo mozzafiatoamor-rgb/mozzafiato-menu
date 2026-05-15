@@ -1029,31 +1029,7 @@ body.carrito-active .add-btn {
   pointer-events: auto;
 }
 
-/* ── Mode toggle row ── */
-.carrito-mode-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
-  border-bottom: 1px solid rgba(139,122,82,.2);
-  background: rgba(139,122,82,.06);
-  flex-shrink: 0;
-}
-
-.carrito-mode-label {
-  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
-  font-style: italic;
-  font-size: .88rem;
-  color: var(--text-soft);
-  transition: color .3s;
-}
-
-body.carrito-active .carrito-mode-label {
-  color: var(--gold-dark);
-  font-weight: 600;
-}
-
-/* Toggle switch */
+/* ── Mode toggle switch ── */
 .carrito-toggle {
   position: relative;
   display: inline-block;
@@ -1098,6 +1074,36 @@ body.carrito-active .carrito-mode-label {
   transform: translateX(20px);
 }
 
+/* ── Mode FAB (floating toggle) ── */
+#mode-fab {
+  position: fixed;
+  top: 14px;
+  right: 72px;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(237,232,220,.92);
+  border: 1px solid rgba(139,122,82,.3);
+  padding: 8px 12px 8px 14px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  transition: background .3s, border-color .3s;
+}
+#mode-fab.mode-active {
+  background: var(--gold-dark);
+  border-color: var(--gold-dark);
+}
+#mode-fab-label {
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-style: italic;
+  font-size: .78rem;
+  color: var(--gold-dark);
+  white-space: nowrap;
+  transition: color .3s;
+}
+#mode-fab.mode-active #mode-fab-label { color: var(--footer-text); }
+
 /* ── Tutorial help button ── */
 #tutorial-help-btn {
   position: fixed;
@@ -1122,117 +1128,35 @@ body.carrito-active .carrito-mode-label {
 }
 #tutorial-help-btn:hover { background: rgba(94,79,48,.28); }
 
-/* ── Tutorial modal ── */
-#tutorial-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(20,14,8,.7);
-  z-index: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: lbFadeIn .3s ease;
-  backdrop-filter: blur(4px);
+/* ── Tutorial spotlight ── */
+@keyframes tutFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes tutSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.tutorial-card {
-  background: var(--bg);
-  max-width: 360px;
-  width: 100%;
-  padding: 28px 24px 24px;
-  position: relative;
-  box-shadow: 0 24px 60px rgba(0,0,0,.35);
-}
-
-.tutorial-close {
-  position: absolute;
-  top: 12px; right: 14px;
-  background: none;
-  border: none;
-  font-size: .85rem;
-  color: var(--text-soft);
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color .2s;
-}
-.tutorial-close:hover { color: var(--gold-dark); }
-
-.tutorial-logo-wrap {
-  text-align: center;
-  margin-bottom: 12px;
-}
-.tutorial-logo-wrap img {
-  width: 64px;
-  filter: sepia(70%) brightness(0.6) saturate(0.6);
-}
-
-.tutorial-title {
-  font-family: 'Great Vibes', cursive;
-  font-size: 2rem;
-  color: var(--gold-dark);
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-.tutorial-sub {
-  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
-  font-style: italic;
-  font-size: .88rem;
-  color: var(--text-soft);
-  text-align: center;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-
-.tutorial-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 22px;
-}
-
-.tutorial-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-}
-
-.tutorial-step-icon {
-  width: 44px;
-  height: 44px;
+.tut-dot {
+  width: 7px; height: 7px;
   border-radius: 50%;
-  background: var(--gold-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: var(--footer-text);
+  background: rgba(139,122,82,.3);
+  transition: background .3s;
 }
+.tut-dot.active { background: var(--gold-dark); }
 
-.tutorial-step-icon svg { stroke: var(--footer-text); }
-
-.tutorial-step-text {
-  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
-  font-size: .87rem;
-  color: var(--text);
-  line-height: 1.55;
-  padding-top: 4px;
+/* Pulsing ring around highlighted element */
+.tut-ring {
+  position: fixed;
+  border-radius: 50%;
+  border: 2px solid var(--gold-light);
+  animation: tutRing 1.2s ease-in-out infinite;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
-
-.tutorial-step-text strong { color: var(--gold-dark); }
-
-.tutorial-cta {
-  width: 100%;
-  padding: 13px;
-  background: var(--gold-dark);
-  color: var(--footer-text);
-  border: none;
-  cursor: pointer;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-style: italic;
-  font-size: .95rem;
-  letter-spacing: .03em;
-  transition: background .2s;
+@keyframes tutRing {
+  0%   { box-shadow: 0 0 0 0 rgba(196,173,130,.6); }
+  70%  { box-shadow: 0 0 0 12px rgba(196,173,130,0); }
+  100% { box-shadow: 0 0 0 0 rgba(196,173,130,0); }
 }
-.tutorial-cta:hover { background: var(--gold); }

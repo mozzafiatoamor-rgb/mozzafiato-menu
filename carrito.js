@@ -185,11 +185,13 @@ function toggleMode() {
 
 function updateToggleUI() {
   const toggle = document.getElementById('mode-toggle');
-  const label  = document.getElementById('mode-toggle-label');
+  const label  = document.getElementById('mode-fab-label');
+  const fab    = document.getElementById('mode-fab');
   if (!toggle) return;
   const active = isActiveMode();
   toggle.checked = active;
-  if (label) label.textContent = active ? 'Modo pedido activo' : 'Modo pedido';
+  if (label) label.textContent = active ? 'Modo activo' : 'Modo pedido';
+  if (fab) fab.classList.toggle('mode-active', active);
 }
 
 /* ── Open / Close panel ── */
@@ -512,80 +514,157 @@ function chooseTisana(tipo, sabor) {
   document.getElementById('tisana-picker')?.remove();
 }
 
-/* ── Tutorial ── */
+/* ── Tutorial spotlight ── */
+const TUTORIAL_STEPS = [
+  {
+    targetId: 'carrito-fab',
+    arrow: 'down',
+    title: 'Tu lista de pedido',
+    text: 'Toca aquí para abrir tu pedido y ver las opciones.',
+  },
+  {
+    targetId: 'mode-fab',
+    arrow: 'down',
+    title: 'Modo pedido',
+    text: 'Activa este switch para ver el botón + junto a cada platillo y anotar lo que deseas.',
+  },
+  {
+    targetId: 'tutorial-help-btn',
+    arrow: 'up',
+    title: '¿Dudas?',
+    text: 'Toca el ? en cualquier momento para volver a ver este tutorial.',
+  },
+];
+
+let tutorialStep = 0;
+let tutorialTimer = null;
+const STEP_DURATION = 3500;
+
 function buildTutorial() {
-  // Help button — always visible
   const helpBtn = document.createElement('button');
   helpBtn.id = 'tutorial-help-btn';
   helpBtn.setAttribute('aria-label', 'Ayuda');
   helpBtn.innerHTML = '?';
-  helpBtn.addEventListener('click', showTutorial);
+  helpBtn.addEventListener('click', () => startTutorial(0));
   document.body.appendChild(helpBtn);
 
-  // Show on first visit to any menu page
   if (localStorage.getItem(TUTORIAL_KEY) !== 'seen') {
-    setTimeout(showTutorial, 800);
+    setTimeout(() => startTutorial(0), 900);
   }
 }
 
-function showTutorial() {
-  const existing = document.getElementById('tutorial-modal');
-  if (existing) existing.remove();
+function startTutorial(step) {
+  clearTimeout(tutorialTimer);
+  tutorialStep = step;
+  renderTutorialStep();
+}
 
-  const modal = document.createElement('div');
-  modal.id = 'tutorial-modal';
-  modal.innerHTML = `
-    <div class="tutorial-card">
-      <button class="tutorial-close" onclick="closeTutorial()">✕</button>
-      <div class="tutorial-logo-wrap">
-        <img src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
-      </div>
-      <h2 class="tutorial-title">Bienvenido</h2>
-      <p class="tutorial-sub">Mientras esperas al mesero, puedes anotar tu pedido aquí mismo.</p>
-      <div class="tutorial-steps">
-        <div class="tutorial-step">
-          <div class="tutorial-step-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28">
-              <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-              <rect x="9" y="3" width="6" height="4" rx="1"/>
-              <path d="M9 12h6M9 16h4"/>
-            </svg>
-          </div>
-          <div class="tutorial-step-text">
-            <strong>Toca el ícono de lista</strong> (arriba a la derecha) para activar el modo de pedido y ver el botón <strong>+</strong> junto a cada platillo.
-          </div>
-        </div>
-        <div class="tutorial-step">
-          <div class="tutorial-step-icon" style="background:var(--gold-dark);color:#fff;font-size:1.2rem;font-weight:bold;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;flex-shrink:0">+</div>
-          <div class="tutorial-step-text">
-            <strong>Toca +</strong> junto a lo que quieras pedir. Puedes agregar varios platillos mientras navegas el menú.
-          </div>
-        </div>
-        <div class="tutorial-step">
-          <div class="tutorial-step-icon" style="background:#25d366;display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:50%;flex-shrink:0">
-            <svg viewBox="0 0 24 24" fill="white" width="24" height="24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
-            </svg>
-          </div>
-          <div class="tutorial-step-text">
-            <strong>Comparte por WhatsApp</strong> tu lista al mesero o para hacer tu pedido directamente.
-          </div>
-        </div>
-      </div>
-      <button class="tutorial-cta" onclick="closeTutorial()">¡Entendido, explorar menú!</button>
-    </div>
+function renderTutorialStep() {
+  // Remove existing overlay
+  document.getElementById('tutorial-overlay')?.remove();
+
+  if (tutorialStep >= TUTORIAL_STEPS.length) {
+    closeTutorial();
+    return;
+  }
+
+  const s = TUTORIAL_STEPS[tutorialStep];
+  const target = document.getElementById(s.targetId);
+  if (!target) { tutorialStep++; renderTutorialStep(); return; }
+
+  const rect = target.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const pad = 10;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'tutorial-overlay';
+  overlay.addEventListener('click', () => {
+    clearTimeout(tutorialTimer);
+    tutorialStep++;
+    renderTutorialStep();
+  });
+
+  // Spotlight hole using clip-path
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:800;
+    background:rgba(10,7,4,.78);
+    backdrop-filter:blur(1px);
+    cursor:pointer;
+    --cx:${cx}px;--cy:${cy}px;--r:${Math.max(rect.width,rect.height)/2 + pad}px;
+    -webkit-clip-path: polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%,
+      calc(var(--cx) - var(--r)) calc(var(--cy) - var(--r)),
+      calc(var(--cx) + var(--r)) calc(var(--cy) - var(--r)),
+      calc(var(--cx) + var(--r)) calc(var(--cy) + var(--r)),
+      calc(var(--cx) - var(--r)) calc(var(--cy) + var(--r)),
+      calc(var(--cx) - var(--r)) calc(var(--cy) - var(--r)));
+    animation: tutFadeIn .35s ease;
   `;
-  document.body.appendChild(modal);
+
+  // Progress dots
+  const dots = TUTORIAL_STEPS.map((_, i) =>
+    `<div class="tut-dot${i === tutorialStep ? ' active' : ''}"></div>`
+  ).join('');
+
+  // Tooltip position
+  const isUp  = s.arrow === 'up';
+  const tipTop = isUp
+    ? `${rect.bottom + 16}px`
+    : `${rect.top - 16}px`;
+
+  const tipLeft = Math.min(
+    Math.max(cx - 140, 12),
+    window.innerWidth - 292
+  );
+
+  const arrowStyle = isUp
+    ? `top:-10px;left:${cx - tipLeft - 8}px;border-bottom:10px solid var(--bg);border-top:none;`
+    : `bottom:-10px;left:${cx - tipLeft - 8}px;border-top:10px solid var(--bg);border-bottom:none;`;
+
+  overlay.innerHTML = `
+    <div id="tut-tooltip" style="
+      position:fixed;
+      top:${tipTop};
+      left:${tipLeft}px;
+      width:280px;
+      background:var(--bg);
+      padding:16px 18px 14px;
+      box-shadow:0 8px 32px rgba(0,0,0,.4);
+      pointer-events:none;
+      animation: tutSlideIn .3s ease;
+    ">
+      <div style="position:absolute;width:0;height:0;
+        border-left:8px solid transparent;border-right:8px solid transparent;
+        ${arrowStyle}"></div>
+      <div style="font-family:'Great Vibes',cursive;font-size:1.5rem;color:var(--gold-dark);margin-bottom:4px;">${s.title}</div>
+      <div style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-style:italic;font-size:.85rem;color:var(--text-soft);line-height:1.55;margin-bottom:12px;">${s.text}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;gap:6px;">${dots}</div>
+        <div style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.75rem;color:var(--gold);font-style:italic;">Toca para continuar</div>
+      </div>
+    </div>
+    <div class="tut-ring" style="left:${cx}px;top:${cy}px;width:${Math.max(rect.width,rect.height)+pad*2}px;height:${Math.max(rect.width,rect.height)+pad*2}px;margin-left:${-(Math.max(rect.width,rect.height)+pad*2)/2}px;margin-top:${-(Math.max(rect.width,rect.height)+pad*2)/2}px;"></div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  tutorialTimer = setTimeout(() => {
+    tutorialStep++;
+    renderTutorialStep();
+  }, STEP_DURATION);
 }
 
 function closeTutorial() {
+  clearTimeout(tutorialTimer);
   localStorage.setItem(TUTORIAL_KEY, 'seen');
-  const modal = document.getElementById('tutorial-modal');
-  if (modal) {
-    modal.style.animation = 'lbFadeIn .25s ease reverse';
-    setTimeout(() => modal.remove(), 220);
+  const overlay = document.getElementById('tutorial-overlay');
+  if (overlay) {
+    overlay.style.animation = 'tutFadeIn .25s ease reverse';
+    setTimeout(() => overlay.remove(), 240);
   }
 }
+
+function showTutorial() { startTutorial(0); } // kept for ? button
 
 /* ── Build DOM ── */
 function buildCartDOM() {
@@ -624,15 +703,6 @@ function buildCartDOM() {
       <div class="carrito-title">Mi Pedido</div>
       <button class="carrito-close" onclick="closeCarrito()">✕</button>
     </div>
-    <div class="carrito-mode-row">
-      <span id="mode-toggle-label" class="carrito-mode-label">Modo pedido</span>
-      <label class="carrito-toggle">
-        <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
-        <span class="carrito-toggle-track">
-          <span class="carrito-toggle-thumb"></span>
-        </span>
-      </label>
-    </div>
     <div id="carrito-empty" class="carrito-empty">
       <p>Tu pedido está vacío.<br>Activa el <strong>Modo pedido</strong> y toca <strong>+</strong> junto a cualquier platillo.</p>
     </div>
@@ -649,6 +719,18 @@ function buildCartDOM() {
       </button>
     </div>
   `;
+  /* Floating mode toggle button */
+  const modeBtn = document.createElement('div');
+  modeBtn.id = 'mode-fab';
+  modeBtn.innerHTML = `
+    <span id="mode-fab-label">Modo pedido</span>
+    <label class="carrito-toggle">
+      <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
+      <span class="carrito-toggle-track"><span class="carrito-toggle-thumb"></span></span>
+    </label>
+  `;
+  document.body.appendChild(modeBtn);
+
   document.body.appendChild(panel);
 }
 
