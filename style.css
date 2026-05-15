@@ -918,3 +918,97 @@ li[data-bev-item], .cafe-item[data-bev-item], .price-row[data-bev-item] {
   gap: 8px;
   cursor: pointer;
 }
+
+/* ── Pasta armar button ── */
+.pasta-armar-btn {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--footer-text);
+  background: var(--gold-dark);
+  border: none;
+  padding: 12px 32px;
+  cursor: pointer;
+  letter-spacing: .04em;
+  transition: background .2s, transform .15s;
+}
+.pasta-armar-btn:hover { background: var(--gold); transform: translateY(-1px); }
+
+/* ── Pasta modal steps ── */
+.pasta-modal-step { display:none; }
+.pasta-modal-step.active { display:block; }
+.pasta-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 55vh;
+  overflow-y: auto;
+  margin: 12px 0;
+}
+.pasta-option-btn {
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid rgba(139,122,82,.25);
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  color: var(--gold-dark);
+  transition: background .2s, color .2s;
+  width: 100%;
+}
+.pasta-option-btn .opt-name {
+  font-style: italic;
+  font-size: .95rem;
+  font-weight: bold;
+  display: block;
+}
+.pasta-option-btn .opt-desc {
+  font-size: .78rem;
+  color: var(--text-soft);
+  line-height: 1.4;
+  margin-top: 2px;
+  display: block;
+}
+.pasta-option-btn:hover { background: var(--gold-dark); color: var(--footer-text); }
+.pasta-option-btn:hover .opt-desc { color: var(--gold-light); }
+.pasta-option-btn.selected { background: rgba(139,122,82,.15); border-color: var(--gold); }
+.pasta-step-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pasta-step-nav button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(139,122,82,.3);
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-size: .88rem;
+  color: var(--gold-dark);
+  transition: background .2s;
+}
+.pasta-step-nav button.primary { background: var(--gold-dark); color: var(--footer-text); border-color: var(--gold-dark); }
+.pasta-step-nav button:hover { opacity: .85; }
+.pasta-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+.pasta-progress-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(139,122,82,.25);
+  transition: background .3s;
+}
+.pasta-progress-dot.active { background: var(--gold-dark); }
+.pasta-summary {
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-style: italic;
+  font-size: .82rem;
+  color: var(--gold);
+  text-align: center;
+  min-height: 18px;
+  margin-bottom: 8px;
+}

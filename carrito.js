@@ -70,7 +70,12 @@ function updateBadge() {
 
 /* ── Feedback al agregar ── */
 function showAddedFeedback(name) {
-  showFeedback('+ ' + name);
+  const fb = document.getElementById('carrito-feedback');
+  if (!fb) return;
+  fb.textContent = '+ ' + name;
+  fb.classList.add('visible');
+  clearTimeout(fb._timer);
+  fb._timer = setTimeout(() => fb.classList.remove('visible'), 1800);
 }
 
 /* ── Panel render ── */
@@ -108,19 +113,48 @@ function renderPanel() {
   });
 }
 
-/* ── WhatsApp share ── */
+/* ── WhatsApp share with name prompt ── */
 function shareWhatsApp() {
   const cart = getCart();
   if (cart.length === 0) return;
 
-  let msg = '🍽️ *Mi pedido en Mozzafiato:*\n\n';
-  cart.forEach(item => {
-    msg += `• ${item.qty}x ${item.name}\n`;
-  });
-  msg += '\n_Enviado desde el menú digital Mozzafiato_';
+  // Show name prompt modal
+  const existing = document.getElementById('wa-name-modal');
+  if (existing) existing.remove();
 
-  const encoded = encodeURIComponent(msg);
-  window.open('https://wa.me/529984088897?text=' + encoded, '_blank');
+  const modal = document.createElement('div');
+  modal.id = 'wa-name-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);animation:lbFadeIn .2s ease';
+  modal.innerHTML = `
+    <div class="tisana-picker-box" style="width:310px">
+      <p class="tisana-picker-title">Tu pedido</p>
+      <p class="tisana-picker-sub">¿Cuál es tu nombre?</p>
+      <input id="wa-name-input" type="text" placeholder="Ej: Gustavo Díaz"
+        style="width:100%;padding:10px 14px;border:1px solid rgba(139,122,82,.35);background:transparent;
+               font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-style:italic;
+               font-size:.95rem;color:var(--gold-dark);outline:none;margin-bottom:14px;"
+        onkeydown="if(event.key==='Enter') sendWA()">
+      <div class="pasta-step-nav">
+        <button onclick="document.getElementById('wa-name-modal').remove()">Cancelar</button>
+        <button class="primary" onclick="sendWA()">Enviar por WhatsApp</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('wa-name-input')?.focus(), 100);
+}
+
+function sendWA() {
+  const cart = getCart();
+  const nameInput = document.getElementById('wa-name-input');
+  const name = nameInput?.value?.trim() || 'un cliente';
+  document.getElementById('wa-name-modal')?.remove();
+
+  let msg = `Hola, soy *${name}*. Les envío mi pedido desde el menú digital Mozzafiato:\n\n`;
+  cart.forEach(item => { msg += `• ${item.qty}x ${item.name}\n`; });
+  msg += `\nEspero su confirmación. ¡Gracias! 🙏`;
+
+  window.open('https://wa.me/529984088897?text=' + encodeURIComponent(msg), '_blank');
 }
 
 /* ── Open / Close panel ── */
@@ -169,35 +203,6 @@ function injectAddButtons() {
     });
     el.appendChild(btn);
   });
-
-  /* ── Pasta tipo (clicking the pasta image label) ── */
-  document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
-    if (el.querySelector('.add-btn')) return;
-    const tipo = el.dataset.pastaTipo;
-    const btn = makeBtn('Seleccionar ' + tipo);
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showPastaPicker('tipo', tipo);
-      btn.classList.add('added');
-      setTimeout(() => btn.classList.remove('added'), 400);
-    });
-    el.appendChild(btn);
-  });
-
-  /* ── Pasta salsa ── */
-  document.querySelectorAll('[data-pasta-salsa]').forEach(el => {
-    if (el.querySelector('.add-btn')) return;
-    const salsa = el.dataset.pastaSalsa;
-    const btn = makeBtn('Seleccionar salsa ' + salsa);
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      showPastaPicker('salsa', salsa);
-    });
-    el.appendChild(btn);
-  });
-
-  /* ── Pasta proteina (standalone, in case user wants to add separately) ── */
-  // Proteins are handled inside the salsa picker modal, no standalone button needed
 
   /* ── Latte picker (data-latte-sabor) ── */
   document.querySelectorAll('[data-latte-sabor]').forEach(el => {
@@ -260,52 +265,123 @@ function makeBtn(label) {
   return btn;
 }
 
-/* ── Pasta 3-step picker state ── */
-const pastaState = { tipo: null, salsa: null };
+/* ── Pasta 3-step modal ── */
+const PASTA_SALSAS = [
+  { name: 'Alfredo',      desc: 'Salsa blanca cremosa con vino blanco, queso parmesano y albahaca.',                                    precio: 185 },
+  { name: 'Amatriciana',  desc: 'Concasse de tomate, chile guindilla, tocino crujiente y cherrys salteados con parmesano.',             precio: 175 },
+  { name: 'Boloñesa',     desc: 'Cocción lenta de carne molida mixta en jugo de tomate fresco con ralladura de parmesano.',             precio: 210 },
+  { name: 'Vegetariana',  desc: 'Pesto cremoso con vegetales salteados, pimientos, calabaza, zanahoria, brócoli y champiñones.',        precio: 196 },
+  { name: 'Cuatro Quesos',desc: 'Salsa cremosa de mozarella, cheddar, holandés de gallo y parmesano.',                                  precio: 175 },
+  { name: 'Carbonara',    desc: 'Cebollas, tocino crujiente y ajo con salsa bechamel, parmesano y perejil.',                            precio: 175 },
+  { name: 'Portobello',   desc: 'Salsa cremosa de la casa con champiñones portobello, parmesano y vino blanco.',                        precio: 175 },
+];
 
-function showPastaPicker(step, value) {
-  if (step === 'tipo') {
-    pastaState.tipo = value;
-    pastaState.salsa = null;
-    // Highlight selected pasta type visually
-    document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
-      el.style.color = el.dataset.pastaTipo === value ? 'var(--gold-dark)' : '';
-      el.style.fontWeight = el.dataset.pastaTipo === value ? '700' : '';
-    });
-    showFeedback('Pasta: ' + value + ' — ahora elige la salsa');
-    return;
-  }
+function showPastaModal() {
+  const existing = document.getElementById('pasta-modal');
+  if (existing) existing.remove();
 
-  if (step === 'salsa') {
-    if (!pastaState.tipo) {
-      showFeedback('Primero elige el tipo de pasta ↑');
-      return;
+  const state = { tipo: null, salsa: null, proteina: null };
+
+  const modal = document.createElement('div');
+  modal.id = 'pasta-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);animation:lbFadeIn .2s ease';
+
+  function render(step) {
+    const summary = [state.tipo, state.salsa].filter(Boolean).join(' · ');
+    const dots = [1,2,3].map((i,idx) => `<div class="pasta-progress-dot${idx < step ? ' active' : ''}"></div>`).join('');
+
+    let content = '';
+
+    if (step === 1) {
+      content = `
+        <p class="tisana-picker-title">Arma tu pasta</p>
+        <p class="tisana-picker-sub">Paso 1 — Elige el tipo de pasta</p>
+        <div class="pasta-progress">${dots}</div>
+        <div class="pasta-options-list">
+          ${['Fetuccini','Fusilli'].map(t => `
+            <button class="pasta-option-btn${state.tipo===t?' selected':''}" onclick="pastaSelect(1,'${t}')">
+              <span class="opt-name">${t}</span>
+            </button>`).join('')}
+        </div>
+        <div class="pasta-step-nav">
+          <button onclick="document.getElementById('pasta-modal').remove()">Cancelar</button>
+          <button class="primary" onclick="pastaNext(2)" ${!state.tipo?'disabled':''}>Siguiente →</button>
+        </div>`;
     }
-    pastaState.salsa = value;
-    // Ask for protein
-    showGenericPicker({
-      title: pastaState.tipo + ' · ' + value,
-      sub: '¿Deseas agregar proteína? (opcional)',
-      options: [
-        { label: 'Sin proteína', note: '' },
-        { label: 'Pollo',        note: '+$60' },
-        { label: 'Arrachera',    note: '+$70' },
-        { label: 'Camarón',      note: '+$90' },
-      ],
-      onSelect: (proteina) => {
-        const fullName = proteina === 'Sin proteína'
-          ? pastaState.tipo + ' · ' + pastaState.salsa
-          : pastaState.tipo + ' · ' + pastaState.salsa + ' con ' + proteina;
-        addItem(fullName);
-        pastaState.tipo = null;
-        pastaState.salsa = null;
-        document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
-          el.style.color = ''; el.style.fontWeight = '';
-        });
-      },
-    });
-    return;
+
+    if (step === 2) {
+      content = `
+        <p class="tisana-picker-title">${state.tipo}</p>
+        <p class="tisana-picker-sub">Paso 2 — Elige la salsa</p>
+        <div class="pasta-progress">${dots}</div>
+        <p class="pasta-summary">${summary}</p>
+        <div class="pasta-options-list">
+          ${PASTA_SALSAS.map(s => `
+            <button class="pasta-option-btn${state.salsa===s.name?' selected':''}" onclick="pastaSelect(2,'${s.name}')">
+              <span class="opt-name">${s.name} <span style="font-weight:normal;font-size:.8rem;color:var(--gold)">$${s.precio}</span></span>
+              <span class="opt-desc">${s.desc}</span>
+            </button>`).join('')}
+        </div>
+        <div class="pasta-step-nav">
+          <button onclick="pastaNext(1)">← Atrás</button>
+          <button class="primary" onclick="pastaNext(3)" ${!state.salsa?'disabled':''}>Siguiente →</button>
+        </div>`;
+    }
+
+    if (step === 3) {
+      content = `
+        <p class="tisana-picker-title">${state.tipo} · ${state.salsa}</p>
+        <p class="tisana-picker-sub">Paso 3 — Proteína (opcional)</p>
+        <div class="pasta-progress">${dots}</div>
+        <p class="pasta-summary">${summary}</p>
+        <div class="pasta-options-list">
+          ${[
+            { name: 'Sin proteína', note: '' },
+            { name: 'Pechuga de pollo', note: '+$60' },
+            { name: 'Arrachera', note: '+$70' },
+            { name: 'Camarón', note: '+$90' },
+          ].map(p => `
+            <button class="pasta-option-btn${state.proteina===p.name?' selected':''}" onclick="pastaSelect(3,'${p.name.replace(/'/g,"\\'")}')">
+              <span class="opt-name">${p.name} ${p.note ? `<span style="font-weight:normal;font-size:.8rem;color:var(--gold)">${p.note}</span>` : ''}</span>
+            </button>`).join('')}
+        </div>
+        <div class="pasta-step-nav">
+          <button onclick="pastaNext(2)">← Atrás</button>
+          <button class="primary" onclick="pastaConfirm()" ${!state.proteina?'disabled':''}>Agregar al pedido</button>
+        </div>`;
+    }
+
+    modal.innerHTML = `<div class="tisana-picker-box" style="max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">${content}</div>`;
+
+    // Re-bind functions to modal state
+    modal._state = state;
+    modal._step  = step;
   }
+
+  window.pastaSelect = (step, value) => {
+    const s = document.getElementById('pasta-modal')?._state;
+    if (!s) return;
+    if (step === 1) s.tipo = value;
+    if (step === 2) s.salsa = value;
+    if (step === 3) s.proteina = value;
+    render(step);
+  };
+  window.pastaNext = (step) => {
+    render(step);
+  };
+  window.pastaConfirm = () => {
+    const s = document.getElementById('pasta-modal')?._state;
+    if (!s) return;
+    const fullName = s.proteina === 'Sin proteína'
+      ? s.tipo + ' · ' + s.salsa
+      : s.tipo + ' · ' + s.salsa + ' con ' + s.proteina;
+    addItem(fullName);
+    document.getElementById('pasta-modal').remove();
+  };
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+  render(1);
 }
 
 function showFeedback(msg) {
@@ -316,6 +392,7 @@ function showFeedback(msg) {
   clearTimeout(fb._timer);
   fb._timer = setTimeout(() => fb.classList.remove('visible'), 2500);
 }
+
 
 /* ── Latte/Cappuccino two-step picker ── */
 function showLattePicker(sabor) {

@@ -54,18 +54,19 @@
       <!-- STEP 1: TIPO -->
       <div class="section-block">
         <p class="paso-heading">1. Escoge el tipo de pasta.</p>
+        <div style="text-align:center;margin-bottom:20px"><button class="pasta-armar-btn" onclick="showPastaModal()">+ Armar mi pasta</button></div>
         <div class="pasta-selector">
           <div class="pasta-type">
             <div class="food-img-wrap">
               <img src="images/7.png" alt="Fetuccini">
             </div>
-            <span class="pasta-label" data-pasta-tipo="Fetuccini">Fetuccini</span>
+            <span class="pasta-label" >Fetuccini</span>
           </div>
           <div class="pasta-type">
             <div class="food-img-wrap">
               <img src="images/8.png" alt="Fusilli">
             </div>
-            <span class="pasta-label" data-pasta-tipo="Fusilli">Fusilli</span>
+            <span class="pasta-label" >Fusilli</span>
           </div>
         </div>
       </div>
@@ -75,37 +76,37 @@
         <p class="paso-heading">2. Elige el tipo de salsa.</p>
         <div class="sauce-grid">
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Alfredo">Alfredo</span>
+            <span class="dish-name bold-title">Alfredo</span>
             <p class="dish-desc">Salsa blanca cremosa con un toque de vino blanco y queso parmesano, perfumada con finas hojas de albahaca.</p>
             <span class="dish-price">185</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Amatriciana">Amatriciana</span>
+            <span class="dish-name bold-title">Amatriciana</span>
             <p class="dish-desc">Concasse de tomate y chile guindilla con laminillas de tocino crujiente y cherrys salteados, ornamentado con virutas de queso parmesano.</p>
             <span class="dish-price">175</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Boloñesa">Boloñesa</span>
+            <span class="dish-name bold-title">Boloñesa</span>
             <p class="dish-desc">Cocción lenta de carne molida mixta de res y cerdo en jugo de tomate fresco pelado con una base de batutto italiano. Detallado con ralladura de queso parmesano.</p>
             <span class="dish-price">210</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Vegetariana">Vegetariana</span>
+            <span class="dish-name bold-title">Vegetariana</span>
             <p class="dish-desc">Salsa cremosa al pesto, con vegetales salteados, pimientos, calabaza italiana, zanahoria, brócoli y champiñones, con un toque de vino blanco, almendras tostadas y queso parmesano rallado.</p>
             <span class="dish-price">196</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Cuatro Quesos">Cuatro Quesos</span>
+            <span class="dish-name bold-title">Cuatro Quesos</span>
             <p class="dish-desc">Salsa cremosa de cuatro quesos, mozarrella, cheddar, holandés de gallo y parmesano.</p>
             <span class="dish-price">175</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Carbonara">Carbonara</span>
+            <span class="dish-name bold-title">Carbonara</span>
             <p class="dish-desc">Mix de cebollas finamente picadas con abundantes laminillas de crujiente tocino y ajo. Con salsa cremosa bechamel. Adornado con un crepitante de queso parmesano y perejil.</p>
             <span class="dish-price">175</span>
           </div>
           <div class="dish-card">
-            <span class="dish-name bold-title" data-pasta-salsa="Portobello">Portobello</span>
+            <span class="dish-name bold-title">Portobello</span>
             <p class="dish-desc">Salsa cremosa de la casa, con queso parmesano, champiñones portobello y un toque de vino blanco.</p>
             <span class="dish-price">175</span>
           </div>
@@ -116,9 +117,9 @@
       <div class="section-block">
         <p class="paso-heading">3. Disfruta de proteína. <span style="font-size:.85rem;font-style:italic;color:var(--gold)">(opcional)</span></p>
         <div class="extra-proteins">
-          <div class="dish-card"><span class="dish-name" data-pasta-proteina="Pechuga de pollo a la plancha" style="font-size:.95rem">Pechuga de pollo a la plancha</span><span class="dish-price">60</span></div>
-          <div class="dish-card"><span class="dish-name" data-pasta-proteina="Arrachera" style="font-size:.95rem">Arrachera</span><span class="dish-price">70</span></div>
-          <div class="dish-card"><span class="dish-name" data-pasta-proteina="Camarón" style="font-size:.95rem">Camarón</span><span class="dish-price">90</span></div>
+          <div class="dish-card"><span class="dish-name" style="font-size:.95rem">Pechuga de pollo a la plancha</span><span class="dish-price">60</span></div>
+          <div class="dish-card"><span class="dish-name" style="font-size:.95rem">Arrachera</span><span class="dish-price">70</span></div>
+          <div class="dish-card"><span class="dish-name" style="font-size:.95rem">Camarón</span><span class="dish-price">90</span></div>
         </div>
       </div>
 
@@ -127,7 +128,7 @@
       <!-- LASAGNA -->
       <div class="dish-illustrated">
         <div class="section-block">
-          <h2 class="section-heading">Lasagna</h2>
+          <h2 class="section-heading">Lasagna <button class="add-btn" style="font-size:.9rem;width:24px;height:24px" onclick="addItem('Lasagna');showFeedback('+ Lasagna')">+</button></h2>
           <span class="dish-price" style="font-size:1.3rem;display:block;margin-bottom:12px">269</span>
           <p class="dish-desc">Deliciosa pasta italiana en forma de anchas capas con ragú a la boloñesa y gratinada con gouda.</p>
         </div>
