@@ -1014,3 +1014,166 @@ li[data-bev-item], .cafe-item[data-bev-item], .price-row[data-bev-item] {
   min-height: 18px;
   margin-bottom: 8px;
 }
+
+/* ══════════════════════════════
+   MODO ACTIVO — botones + ocultos por defecto
+══════════════════════════════ */
+.add-btn {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s, background .2s, color .2s, transform .15s;
+}
+
+body.carrito-active .add-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* FAB pulse cuando no está activo aún */
+body:not(.carrito-active) #carrito-fab {
+  animation: fabPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes fabPulse {
+  0%, 100% { box-shadow: 0 3px 16px rgba(0,0,0,.28); transform: scale(1); }
+  50%       { box-shadow: 0 3px 28px rgba(94,79,48,.55); transform: scale(1.07); }
+}
+
+/* ── Tutorial help button ── */
+#tutorial-help-btn {
+  position: fixed;
+  bottom: 28px;
+  left: 16px;
+  z-index: 300;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(94,79,48,.15);
+  border: 1px solid rgba(139,122,82,.35);
+  color: var(--gold-dark);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+  backdrop-filter: blur(4px);
+}
+#tutorial-help-btn:hover { background: rgba(94,79,48,.28); }
+
+/* ── Tutorial modal ── */
+#tutorial-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(20,14,8,.7);
+  z-index: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: lbFadeIn .3s ease;
+  backdrop-filter: blur(4px);
+}
+
+.tutorial-card {
+  background: var(--bg);
+  max-width: 360px;
+  width: 100%;
+  padding: 28px 24px 24px;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0,0,0,.35);
+}
+
+.tutorial-close {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none;
+  border: none;
+  font-size: .85rem;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color .2s;
+}
+.tutorial-close:hover { color: var(--gold-dark); }
+
+.tutorial-logo-wrap {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.tutorial-logo-wrap img {
+  width: 64px;
+  filter: sepia(70%) brightness(0.6) saturate(0.6);
+}
+
+.tutorial-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 2rem;
+  color: var(--gold-dark);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.tutorial-sub {
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-style: italic;
+  font-size: .88rem;
+  color: var(--text-soft);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.tutorial-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.tutorial-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.tutorial-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gold-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--footer-text);
+}
+
+.tutorial-step-icon svg { stroke: var(--footer-text); }
+
+.tutorial-step-text {
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-size: .87rem;
+  color: var(--text);
+  line-height: 1.55;
+  padding-top: 4px;
+}
+
+.tutorial-step-text strong { color: var(--gold-dark); }
+
+.tutorial-cta {
+  width: 100%;
+  padding: 13px;
+  background: var(--gold-dark);
+  color: var(--footer-text);
+  border: none;
+  cursor: pointer;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: .95rem;
+  letter-spacing: .03em;
+  transition: background .2s;
+}
+.tutorial-cta:hover { background: var(--gold); }
