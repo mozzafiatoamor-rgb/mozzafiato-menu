@@ -164,29 +164,38 @@ function isActiveMode() {
   return localStorage.getItem(MODE_KEY) === 'active';
 }
 
-function activateMode() {
-  localStorage.setItem(MODE_KEY, 'active');
-  document.body.classList.add('carrito-active');
-  updateBadge();
-}
-
-/* ── Open / Close panel ── */
-function openCarrito() {
-  // First tap activates + buttons
-  if (!isActiveMode()) {
-    activateMode();
-    // Animate all add buttons briefly to show them
+function toggleMode() {
+  const active = isActiveMode();
+  if (active) {
+    localStorage.removeItem(MODE_KEY);
+    document.body.classList.remove('carrito-active');
+  } else {
+    localStorage.setItem(MODE_KEY, 'active');
+    document.body.classList.add('carrito-active');
+    // Brief cascade animation to show + buttons
     document.querySelectorAll('.add-btn').forEach((btn, i) => {
       setTimeout(() => {
         btn.classList.add('added');
         setTimeout(() => btn.classList.remove('added'), 400);
-      }, i * 18);
+      }, i * 14);
     });
-    // Show a quick hint toast
-    showAddedFeedback('¡Toca + en cualquier platillo para anotarlo!');
-    return; // don't open panel on first tap, just activate
   }
+  updateToggleUI();
+}
+
+function updateToggleUI() {
+  const toggle = document.getElementById('mode-toggle');
+  const label  = document.getElementById('mode-toggle-label');
+  if (!toggle) return;
+  const active = isActiveMode();
+  toggle.checked = active;
+  if (label) label.textContent = active ? 'Modo pedido activo' : 'Modo pedido';
+}
+
+/* ── Open / Close panel ── */
+function openCarrito() {
   renderPanel();
+  updateToggleUI();
   document.getElementById('carrito-panel').classList.add('open');
   document.getElementById('carrito-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -615,8 +624,17 @@ function buildCartDOM() {
       <div class="carrito-title">Mi Pedido</div>
       <button class="carrito-close" onclick="closeCarrito()">✕</button>
     </div>
+    <div class="carrito-mode-row">
+      <span id="mode-toggle-label" class="carrito-mode-label">Modo pedido</span>
+      <label class="carrito-toggle">
+        <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
+        <span class="carrito-toggle-track">
+          <span class="carrito-toggle-thumb"></span>
+        </span>
+      </label>
+    </div>
     <div id="carrito-empty" class="carrito-empty">
-      <p>Tu pedido está vacío.<br>Toca <strong>+</strong> junto a cualquier platillo para agregarlo.</p>
+      <p>Tu pedido está vacío.<br>Activa el <strong>Modo pedido</strong> y toca <strong>+</strong> junto a cualquier platillo.</p>
     </div>
     <div id="carrito-body" class="carrito-body"></div>
     <div id="carrito-actions" class="carrito-actions" style="display:none">
