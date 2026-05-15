@@ -145,22 +145,88 @@ function closeCarrito() {
 /* ── Inject + buttons next to every dish name ── */
 function injectAddButtons() {
   document.querySelectorAll('.dish-name').forEach(el => {
-    if (el.querySelector('.add-btn')) return; /* already injected */
-    const name = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
-    if (!name || name.length < 3) return;
+    if (el.querySelector('.add-btn')) return;
+    const rawName = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
+    if (!rawName || rawName.length < 3) return;
+
+    /* Use data-categoria prefix if set on the element or its parent .dish-card */
+    const categoria = el.dataset.categoria || el.closest('[data-categoria]')?.dataset.categoria || '';
+    const fullName = categoria ? categoria + ' · ' + rawName : rawName;
 
     const btn = document.createElement('button');
     btn.className = 'add-btn';
-    btn.setAttribute('aria-label', 'Agregar ' + name);
+    btn.setAttribute('aria-label', 'Agregar ' + fullName);
     btn.innerHTML = '+';
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      addItem(name);
+      addItem(fullName);
       btn.classList.add('added');
       setTimeout(() => btn.classList.remove('added'), 400);
     });
     el.appendChild(btn);
   });
+
+  /* ── Inject + buttons for beverage list items (data-bev-item) ── */
+  document.querySelectorAll('[data-bev-item]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const fullName = el.dataset.bevItem;
+    if (!fullName) return;
+
+    const btn = document.createElement('button');
+    btn.className = 'add-btn';
+    btn.setAttribute('aria-label', 'Agregar ' + fullName);
+    btn.innerHTML = '+';
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addItem(fullName);
+      btn.classList.add('added');
+      setTimeout(() => btn.classList.remove('added'), 400);
+    });
+    el.appendChild(btn);
+  });
+
+  /* ── Tisana type-picker: show modal when data-categoria="Tisana" ── */
+  document.querySelectorAll('.dish-name[data-categoria="Tisana"]').forEach(el => {
+    const addBtn = el.querySelector('.add-btn');
+    if (!addBtn) return;
+    const rawName = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
+
+    addBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showTisanaPicker(rawName);
+    }, true); /* capture phase to override the default addItem */
+  });
+}
+
+/* ── Tisana type picker ── */
+function showTisanaPicker(sabor) {
+  const existing = document.getElementById('tisana-picker');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'tisana-picker';
+  modal.innerHTML = `
+    <div class="tisana-picker-box">
+      <p class="tisana-picker-title">${sabor}</p>
+      <p class="tisana-picker-sub">¿En qué presentación?</p>
+      <div class="tisana-picker-btns">
+        <button onclick="chooseTisana('Tisana Caliente', '${sabor.replace(/'/g,"\\'")}')">Caliente<br><span>$99</span></button>
+        <button onclick="chooseTisana('Tisana Fría', '${sabor.replace(/'/g,"\\'")}')">Fría<br><span>$105</span></button>
+        <button onclick="chooseTisana('Smoothie Tisana', '${sabor.replace(/'/g,"\\'")}')">Smoothie<br><span>$115</span></button>
+      </div>
+      <button class="tisana-picker-cancel" onclick="document.getElementById('tisana-picker').remove()">Cancelar</button>
+    </div>
+  `;
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  document.body.appendChild(modal);
+}
+
+function chooseTisana(tipo, sabor) {
+  const fullName = tipo + ' · ' + sabor;
+  addItem(fullName);
+  document.getElementById('tisana-picker')?.remove();
 }
 
 /* ── Build DOM ── */

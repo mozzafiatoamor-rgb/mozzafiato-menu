@@ -830,3 +830,81 @@ footer .footer-brand {
   transition: border-color .2s, color .2s;
 }
 .carrito-btn-clear:hover { border-color: #c0392b; color: #c0392b; }
+
+/* ── Tisana type picker modal ── */
+#tisana-picker {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  animation: lbFadeIn .2s ease;
+}
+.tisana-picker-box {
+  background: var(--bg);
+  padding: 28px 24px 20px;
+  max-width: 320px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.tisana-picker-title {
+  font-family: 'Great Vibes', cursive;
+  font-size: 1.8rem;
+  color: var(--gold-dark);
+  margin-bottom: 4px;
+}
+.tisana-picker-sub {
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-style: italic;
+  font-size: .85rem;
+  color: var(--text-soft);
+  margin-bottom: 20px;
+}
+.tisana-picker-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.tisana-picker-btns button {
+  flex: 1;
+  padding: 12px 8px;
+  border: 1px solid rgba(139,122,82,.3);
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-size: .88rem;
+  color: var(--gold-dark);
+  transition: background .2s, color .2s;
+  line-height: 1.5;
+}
+.tisana-picker-btns button span {
+  font-size: .75rem;
+  color: var(--gold);
+}
+.tisana-picker-btns button:hover {
+  background: var(--gold-dark);
+  color: var(--footer-text);
+}
+.tisana-picker-btns button:hover span { color: var(--gold-light); }
+.tisana-picker-cancel {
+  background: none;
+  border: none;
+  font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
+  font-style: italic;
+  font-size: .82rem;
+  color: var(--text-soft);
+  cursor: pointer;
+  padding: 4px 12px;
+}
+
+/* ── bev-item list style ── */
+li[data-bev-item], .cafe-item[data-bev-item], .price-row[data-bev-item] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

@@ -56,14 +56,14 @@
           <div class="bev-section">
             <h2 class="section-heading">Café Clásico</h2>
             <div class="cafe-grid">
-              <div class="cafe-item"><span>Espresso</span><strong>65</strong></div>
-              <div class="cafe-item"><span>Americano de espresso</span><strong>65</strong></div>
-              <div class="cafe-item"><span>Espresso doble</span><strong>75</strong></div>
-              <div class="cafe-item"><span>Americano de espresso doble</span><strong>79</strong></div>
-              <div class="cafe-item"><span>Espresso doble macchiato</span><strong>79</strong></div>
-              <div class="cafe-item"><span>Lechero (1 shot)</span><strong>75</strong></div>
-              <div class="cafe-item"><span>Espresso doble cortado</span><strong>79</strong></div>
-              <div class="cafe-item"><span>Lechero intenso (2 shots)</span><strong>79</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Espresso"><span>Espresso</span><strong>65</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Americano de espresso"><span>Americano de espresso</span><strong>65</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Espresso doble"><span>Espresso doble</span><strong>75</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Americano de espresso doble"><span>Americano de espresso doble</span><strong>79</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Espresso doble macchiato"><span>Espresso doble macchiato</span><strong>79</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Lechero (1 shot)"><span>Lechero (1 shot)</span><strong>75</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Espresso doble cortado"><span>Espresso doble cortado</span><strong>79</strong></div>
+              <div class="cafe-item" data-bev-item="Café · Lechero intenso (2 shots)"><span>Lechero intenso (2 shots)</span><strong>79</strong></div>
             </div>
           </div>
 
@@ -73,12 +73,12 @@
             <div style="display:flex;gap:32px;flex-wrap:wrap;margin-top:10px">
               <div>
                 <ul class="simple-list" style="grid-template-columns:1fr">
-                  <li>Clásico</li><li>Moka</li><li>Cajeta</li><li>Caramelo</li>
-                  <li>Cacahuate</li><li>Crema de avellana</li><li>Vainilla</li>
-                  <li>Licor de café</li><li>Crema irlandesa</li>
-                  <li>Malvavisco tostado</li><li>Nuez de Macadamia</li>
-                  <li>Té chai <em style="color:var(--gold)">(sin café)</em></li>
-                  <li>Té matcha <em style="color:var(--gold)">(sin café)</em></li>
+                  <li data-bev-item="Latte · Clásico">Clásico</li><li data-bev-item="Latte · Moka">Moka</li><li data-bev-item="Latte · Cajeta">Cajeta</li><li data-bev-item="Latte · Caramelo">Caramelo</li>
+                  <li data-bev-item="Latte · Cacahuate">Cacahuate</li><li data-bev-item="Latte · Crema de avellana">Crema de avellana</li><li data-bev-item="Latte · Vainilla">Vainilla</li>
+                  <li data-bev-item="Latte · Licor de café">Licor de café</li><li data-bev-item="Latte · Crema irlandesa">Crema irlandesa</li>
+                  <li data-bev-item="Latte · Malvavisco tostado">Malvavisco tostado</li><li data-bev-item="Latte · Nuez de Macadamia">Nuez de Macadamia</li>
+                  <li data-bev-item="Latte · Té chai">Té chai <em style="color:var(--gold)">(sin café)</em></li>
+                  <li data-bev-item="Latte · Té matcha">Té matcha <em style="color:var(--gold)">(sin café)</em></li>
                 </ul>
               </div>
               <div>
@@ -101,8 +101,8 @@
               <img src="images/17.png" alt="Chocolates Mozzafiato">
             </div>
             <ul class="simple-list" style="grid-template-columns:1fr">
-              <li>Blanco</li><li>Oaxaca</li><li>Europeo</li>
-              <li>Chocomenta</li><li>Chocolate c/ Cacahuate</li>
+              <li data-bev-item="Chocolate · Blanco">Blanco</li><li data-bev-item="Chocolate · Oaxaca">Oaxaca</li><li data-bev-item="Chocolate · Europeo">Europeo</li>
+              <li data-bev-item="Chocolate · Chocomenta">Chocomenta</li><li data-bev-item="Chocolate · Chocolate c/ Cacahuate">Chocolate c/ Cacahuate</li>
             </ul>
           </div>
         </div>
@@ -114,11 +114,11 @@
       <div class="dish-illustrated reverse">
         <div class="section-block">
           <h2 class="section-heading">Tés Exóticos <span class="price-tag">79</span></h2>
-          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title">Yin Yang Tónic</span><p class="dish-desc">Té blanco, té negro, te de durazno, hierbabuena y menta. Con miel de abeja y limón.</p></div>
-          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title">Fusion Herbal</span><p class="dish-desc">Té de manzanilla, hinojo y aloe vera. Con miel de abeja y limón.</p></div>
-          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title">Detóx</span><p class="dish-desc">Té de jengibre y lavanda. Con miel de abeja y limón.</p></div>
-          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title">Oriental</span><p class="dish-desc">Sencha y matcha. Con miel de abeja y limón.</p></div>
-          <div class="dish-card"><span class="dish-name bold-title">Floral</span><p class="dish-desc">Manzanilla y lavanda. Con miel de abeja y limón.</p></div>
+          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title" data-categoria="Té Exótico">Yin Yang Tónic</span><p class="dish-desc">Té blanco, té negro, te de durazno, hierbabuena y menta. Con miel de abeja y limón.</p></div>
+          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title" data-categoria="Té Exótico">Fusion Herbal</span><p class="dish-desc">Té de manzanilla, hinojo y aloe vera. Con miel de abeja y limón.</p></div>
+          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title" data-categoria="Té Exótico">Detóx</span><p class="dish-desc">Té de jengibre y lavanda. Con miel de abeja y limón.</p></div>
+          <div class="dish-card" style="margin-bottom:14px"><span class="dish-name bold-title" data-categoria="Té Exótico">Oriental</span><p class="dish-desc">Sencha y matcha. Con miel de abeja y limón.</p></div>
+          <div class="dish-card"><span class="dish-name bold-title" data-categoria="Té Exótico">Floral</span><p class="dish-desc">Manzanilla y lavanda. Con miel de abeja y limón.</p></div>
         </div>
         <div class="food-img-wrap" style="max-width:280px;margin:0 auto;">
           <img src="images/18.png" alt="Té exótico jarra Mozzafiato">
