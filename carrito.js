@@ -515,156 +515,139 @@ function chooseTisana(tipo, sabor) {
 }
 
 /* ── Tutorial spotlight ── */
-const TUTORIAL_STEPS = [
-  {
-    targetId: 'carrito-fab',
-    arrow: 'down',
-    title: 'Tu lista de pedido',
-    text: 'Toca aquí para abrir tu pedido y ver las opciones.',
-  },
-  {
-    targetId: 'mode-fab',
-    arrow: 'down',
-    title: 'Modo pedido',
-    text: 'Activa este switch para ver el botón + junto a cada platillo y anotar lo que deseas.',
-  },
-  {
-    targetId: 'tutorial-help-btn',
-    arrow: 'up',
-    title: '¿Dudas?',
-    text: 'Toca el ? en cualquier momento para volver a ver este tutorial.',
-  },
-];
-
-let tutorialStep = 0;
-let tutorialTimer = null;
-const STEP_DURATION = 3500;
+/* ── Tutorial — two sequential tooltips ── */
+let _tt1Timer = null;
+let _tt2Timer = null;
 
 function buildTutorial() {
   const helpBtn = document.createElement('button');
   helpBtn.id = 'tutorial-help-btn';
   helpBtn.setAttribute('aria-label', 'Ayuda');
-  helpBtn.innerHTML = '?';
-  helpBtn.addEventListener('click', () => startTutorial(0));
+  helpBtn.textContent = '?';
+  helpBtn.addEventListener('click', startTutorial);
   document.body.appendChild(helpBtn);
 
   if (localStorage.getItem(TUTORIAL_KEY) !== 'seen') {
-    setTimeout(() => startTutorial(0), 900);
+    setTimeout(startTutorial, 900);
   }
 }
 
-function startTutorial(step) {
-  clearTimeout(tutorialTimer);
-  tutorialStep = step;
-  renderTutorialStep();
+function startTutorial() {
+  clearTimeout(_tt1Timer);
+  clearTimeout(_tt2Timer);
+  removeTutorialTooltips();
+  showTT1();
 }
 
-function renderTutorialStep() {
-  // Remove existing overlay
-  document.getElementById('tutorial-overlay')?.remove();
+function removeTutorialTooltips() {
+  document.getElementById('tut-tt1')?.remove();
+  document.getElementById('tut-tt2')?.remove();
+}
 
-  if (tutorialStep >= TUTORIAL_STEPS.length) {
-    closeTutorial();
-    return;
-  }
-
-  const s = TUTORIAL_STEPS[tutorialStep];
-  const target = document.getElementById(s.targetId);
-  if (!target) { tutorialStep++; renderTutorialStep(); return; }
-
+function showTT1() {
+  removeTutorialTooltips();
+  const target = document.getElementById('mode-fab');
+  if (!target) { showTT2(); return; }
   const rect = target.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top + rect.height / 2;
-  const pad = 10;
+  const right = window.innerWidth - rect.right + rect.width / 2 - 20;
 
-  const overlay = document.createElement('div');
-  overlay.id = 'tutorial-overlay';
-  overlay.addEventListener('click', () => {
-    clearTimeout(tutorialTimer);
-    tutorialStep++;
-    renderTutorialStep();
+  const tt = document.createElement('div');
+  tt.id = 'tut-tt1';
+  tt.style.cssText = `
+    position:fixed;
+    top:${rect.bottom + 10}px;
+    right:${Math.max(right - 80, 8)}px;
+    width:210px;
+    background:#3a3020;
+    border-radius:8px;
+    padding:10px 12px;
+    z-index:400;
+    animation:tutSlideIn .3s ease;
+    box-shadow:0 4px 20px rgba(0,0,0,.25);
+  `;
+  tt.innerHTML = `
+    <div style="position:absolute;top:-5px;right:28px;width:9px;height:9px;background:#3a3020;transform:rotate(45deg)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+      <div>
+        <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.85rem;font-weight:600;color:#ede8dc;margin:0 0 4px">Anota tu pedido</p>
+        <p style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.78rem;color:#c4ad82;margin:0;line-height:1.5">Activa el switch para agregar platillos a tu lista mientras esperas al mesero.</p>
+      </div>
+      <button onclick="closeTTAll()" style="background:none;border:none;color:#c4ad82;cursor:pointer;font-size:14px;padding:0;flex-shrink:0;line-height:1">✕</button>
+    </div>
+    <div style="margin-top:8px;height:2px;border-radius:2px;background:rgba(196,173,130,.2);overflow:hidden">
+      <div id="tut-bar1" style="height:100%;width:0%;background:#c4ad82;border-radius:2px"></div>
+    </div>
+  `;
+  document.body.appendChild(tt);
+  requestAnimationFrame(() => {
+    const bar = document.getElementById('tut-bar1');
+    if (bar) { bar.style.transition = 'width 4s linear'; bar.style.width = '100%'; }
   });
 
-  // Spotlight hole using clip-path
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:800;
-    background:rgba(10,7,4,.78);
-    backdrop-filter:blur(1px);
-    cursor:pointer;
-    --cx:${cx}px;--cy:${cy}px;--r:${Math.max(rect.width,rect.height)/2 + pad}px;
-    -webkit-clip-path: polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%,
-      calc(var(--cx) - var(--r)) calc(var(--cy) - var(--r)),
-      calc(var(--cx) + var(--r)) calc(var(--cy) - var(--r)),
-      calc(var(--cx) + var(--r)) calc(var(--cy) + var(--r)),
-      calc(var(--cx) - var(--r)) calc(var(--cy) + var(--r)),
-      calc(var(--cx) - var(--r)) calc(var(--cy) - var(--r)));
-    animation: tutFadeIn .35s ease;
+  _tt1Timer = setTimeout(() => {
+    tt.style.opacity = '0';
+    tt.style.transition = 'opacity .3s';
+    setTimeout(() => { tt.remove(); showTT2(); }, 320);
+  }, 4000);
+}
+
+function showTT2() {
+  removeTutorialTooltips();
+  const target = document.getElementById('carrito-fab');
+  if (!target) { closeTTAll(); return; }
+  const rect = target.getBoundingClientRect();
+  const right = window.innerWidth - rect.right + rect.width / 2 - 22;
+
+  const tt = document.createElement('div');
+  tt.id = 'tut-tt2';
+  tt.style.cssText = `
+    position:fixed;
+    top:${rect.bottom + 10}px;
+    right:${Math.max(right - 90, 8)}px;
+    width:210px;
+    background:var(--bg);
+    border:1px solid rgba(139,122,82,.3);
+    border-radius:8px;
+    padding:10px 12px;
+    z-index:400;
+    animation:tutSlideIn .3s ease;
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
   `;
-
-  // Progress dots
-  const dots = TUTORIAL_STEPS.map((_, i) =>
-    `<div class="tut-dot${i === tutorialStep ? ' active' : ''}"></div>`
-  ).join('');
-
-  // Tooltip position
-  const isUp  = s.arrow === 'up';
-  const tipTop = isUp
-    ? `${rect.bottom + 16}px`
-    : `${rect.top - 16}px`;
-
-  const tipLeft = Math.min(
-    Math.max(cx - 140, 12),
-    window.innerWidth - 292
-  );
-
-  const arrowStyle = isUp
-    ? `top:-10px;left:${cx - tipLeft - 8}px;border-bottom:10px solid var(--bg);border-top:none;`
-    : `bottom:-10px;left:${cx - tipLeft - 8}px;border-top:10px solid var(--bg);border-bottom:none;`;
-
-  overlay.innerHTML = `
-    <div id="tut-tooltip" style="
-      position:fixed;
-      top:${tipTop};
-      left:${tipLeft}px;
-      width:280px;
-      background:var(--bg);
-      padding:16px 18px 14px;
-      box-shadow:0 8px 32px rgba(0,0,0,.4);
-      pointer-events:none;
-      animation: tutSlideIn .3s ease;
-    ">
-      <div style="position:absolute;width:0;height:0;
-        border-left:8px solid transparent;border-right:8px solid transparent;
-        ${arrowStyle}"></div>
-      <div style="font-family:'Great Vibes',cursive;font-size:1.5rem;color:var(--gold-dark);margin-bottom:4px;">${s.title}</div>
-      <div style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-style:italic;font-size:.85rem;color:var(--text-soft);line-height:1.55;margin-bottom:12px;">${s.text}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="display:flex;gap:6px;">${dots}</div>
-        <div style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.75rem;color:var(--gold);font-style:italic;">Toca para continuar</div>
+  tt.innerHTML = `
+    <div style="position:absolute;top:-6px;right:16px;width:9px;height:9px;background:var(--bg);border-left:1px solid rgba(139,122,82,.3);border-top:1px solid rgba(139,122,82,.3);transform:rotate(45deg)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
+      <div>
+        <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.85rem;font-weight:600;color:var(--gold-dark);margin:0 0 4px">Ver y compartir pedido</p>
+        <p style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.78rem;color:var(--text-soft);margin:0;line-height:1.5">Revisa tu lista y envíala por WhatsApp para hacer tu pedido en línea.</p>
       </div>
+      <button onclick="closeTTAll()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:14px;padding:0;flex-shrink:0;line-height:1">✕</button>
     </div>
-    <div class="tut-ring" style="left:${cx}px;top:${cy}px;width:${Math.max(rect.width,rect.height)+pad*2}px;height:${Math.max(rect.width,rect.height)+pad*2}px;margin-left:${-(Math.max(rect.width,rect.height)+pad*2)/2}px;margin-top:${-(Math.max(rect.width,rect.height)+pad*2)/2}px;"></div>
+    <div style="margin-top:8px;height:2px;border-radius:2px;background:rgba(139,122,82,.15);overflow:hidden">
+      <div id="tut-bar2" style="height:100%;width:0%;background:#8b7a52;border-radius:2px"></div>
+    </div>
   `;
+  document.body.appendChild(tt);
+  requestAnimationFrame(() => {
+    const bar = document.getElementById('tut-bar2');
+    if (bar) { bar.style.transition = 'width 4s linear'; bar.style.width = '100%'; }
+  });
 
-  document.body.appendChild(overlay);
-
-  tutorialTimer = setTimeout(() => {
-    tutorialStep++;
-    renderTutorialStep();
-  }, STEP_DURATION);
+  _tt2Timer = setTimeout(() => {
+    tt.style.opacity = '0';
+    tt.style.transition = 'opacity .3s';
+    setTimeout(() => { tt.remove(); localStorage.setItem(TUTORIAL_KEY, 'seen'); }, 320);
+  }, 4000);
 }
 
-function closeTutorial() {
-  clearTimeout(tutorialTimer);
+function closeTTAll() {
+  clearTimeout(_tt1Timer);
+  clearTimeout(_tt2Timer);
+  removeTutorialTooltips();
   localStorage.setItem(TUTORIAL_KEY, 'seen');
-  const overlay = document.getElementById('tutorial-overlay');
-  if (overlay) {
-    overlay.style.animation = 'tutFadeIn .25s ease reverse';
-    setTimeout(() => overlay.remove(), 240);
-  }
 }
 
-function showTutorial() { startTutorial(0); } // kept for ? button
+function showTutorial() { startTutorial(); }
+
 
 /* ── Build DOM ── */
 function buildCartDOM() {

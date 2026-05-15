@@ -1128,35 +1128,32 @@ body.carrito-active .add-btn {
 }
 #tutorial-help-btn:hover { background: rgba(94,79,48,.28); }
 
-/* ── Tutorial spotlight ── */
-@keyframes tutFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+/* ── Tutorial tooltips ── */
 @keyframes tutSlideIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
-.tut-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: rgba(139,122,82,.3);
-  transition: background .3s;
-}
-.tut-dot.active { background: var(--gold-dark); }
-
-/* Pulsing ring around highlighted element */
-.tut-ring {
+/* ── Tutorial help button ── */
+#tutorial-help-btn {
   position: fixed;
+  bottom: 28px;
+  left: 16px;
+  z-index: 300;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  border: 2px solid var(--gold-light);
-  animation: tutRing 1.2s ease-in-out infinite;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
+  background: rgba(94,79,48,.12);
+  border: 1px solid rgba(139,122,82,.28);
+  color: var(--gold-dark);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s;
+  backdrop-filter: blur(4px);
 }
-@keyframes tutRing {
-  0%   { box-shadow: 0 0 0 0 rgba(196,173,130,.6); }
-  70%  { box-shadow: 0 0 0 12px rgba(196,173,130,0); }
-  100% { box-shadow: 0 0 0 0 rgba(196,173,130,0); }
-}
+#tutorial-help-btn:hover { background: rgba(94,79,48,.24); }
