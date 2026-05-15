@@ -797,8 +797,10 @@ footer .footer-brand {
   flex-direction: column;
   gap: 10px;
   padding: 16px 20px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
   border-top: 1px solid rgba(139,122,82,.25);
   flex-shrink: 0;
+  background: var(--bg);
 }
 .carrito-btn-wa {
   display: flex;
@@ -907,4 +909,12 @@ li[data-bev-item], .cafe-item[data-bev-item], .price-row[data-bev-item] {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+/* ── Pasta label clickable ── */
+.pasta-label[data-pasta-tipo] {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }

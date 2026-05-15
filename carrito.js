@@ -70,12 +70,7 @@ function updateBadge() {
 
 /* ── Feedback al agregar ── */
 function showAddedFeedback(name) {
-  const fb = document.getElementById('carrito-feedback');
-  if (!fb) return;
-  fb.textContent = '+ ' + name;
-  fb.classList.add('visible');
-  clearTimeout(fb._timer);
-  fb._timer = setTimeout(() => fb.classList.remove('visible'), 1800);
+  showFeedback('+ ' + name);
 }
 
 /* ── Panel render ── */
@@ -175,6 +170,35 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
+  /* ── Pasta tipo (clicking the pasta image label) ── */
+  document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const tipo = el.dataset.pastaTipo;
+    const btn = makeBtn('Seleccionar ' + tipo);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showPastaPicker('tipo', tipo);
+      btn.classList.add('added');
+      setTimeout(() => btn.classList.remove('added'), 400);
+    });
+    el.appendChild(btn);
+  });
+
+  /* ── Pasta salsa ── */
+  document.querySelectorAll('[data-pasta-salsa]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const salsa = el.dataset.pastaSalsa;
+    const btn = makeBtn('Seleccionar salsa ' + salsa);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showPastaPicker('salsa', salsa);
+    });
+    el.appendChild(btn);
+  });
+
+  /* ── Pasta proteina (standalone, in case user wants to add separately) ── */
+  // Proteins are handled inside the salsa picker modal, no standalone button needed
+
   /* ── Latte picker (data-latte-sabor) ── */
   document.querySelectorAll('[data-latte-sabor]').forEach(el => {
     if (el.querySelector('.add-btn')) return;
@@ -234,6 +258,63 @@ function makeBtn(label) {
   btn.setAttribute('aria-label', label);
   btn.innerHTML = '+';
   return btn;
+}
+
+/* ── Pasta 3-step picker state ── */
+const pastaState = { tipo: null, salsa: null };
+
+function showPastaPicker(step, value) {
+  if (step === 'tipo') {
+    pastaState.tipo = value;
+    pastaState.salsa = null;
+    // Highlight selected pasta type visually
+    document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
+      el.style.color = el.dataset.pastaTipo === value ? 'var(--gold-dark)' : '';
+      el.style.fontWeight = el.dataset.pastaTipo === value ? '700' : '';
+    });
+    showFeedback('Pasta: ' + value + ' — ahora elige la salsa');
+    return;
+  }
+
+  if (step === 'salsa') {
+    if (!pastaState.tipo) {
+      showFeedback('Primero elige el tipo de pasta ↑');
+      return;
+    }
+    pastaState.salsa = value;
+    // Ask for protein
+    showGenericPicker({
+      title: pastaState.tipo + ' · ' + value,
+      sub: '¿Deseas agregar proteína? (opcional)',
+      options: [
+        { label: 'Sin proteína', note: '' },
+        { label: 'Pollo',        note: '+$60' },
+        { label: 'Arrachera',    note: '+$70' },
+        { label: 'Camarón',      note: '+$90' },
+      ],
+      onSelect: (proteina) => {
+        const fullName = proteina === 'Sin proteína'
+          ? pastaState.tipo + ' · ' + pastaState.salsa
+          : pastaState.tipo + ' · ' + pastaState.salsa + ' con ' + proteina;
+        addItem(fullName);
+        pastaState.tipo = null;
+        pastaState.salsa = null;
+        document.querySelectorAll('[data-pasta-tipo]').forEach(el => {
+          el.style.color = ''; el.style.fontWeight = '';
+        });
+      },
+    });
+    return;
+  }
+}
+
+function showFeedback(msg) {
+  const fb = document.getElementById('carrito-feedback');
+  if (!fb) return;
+  fb.textContent = msg;
+  fb.classList.add('visible');
+  clearTimeout(fb._timer);
+  fb._timer = setTimeout(() => fb.classList.remove('visible'), 2500);
 }
 
 /* ── Latte/Cappuccino two-step picker ── */
