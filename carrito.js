@@ -581,14 +581,14 @@ function showTT1() {
   document.body.appendChild(tt);
   requestAnimationFrame(() => {
     const bar = document.getElementById('tut-bar1');
-    if (bar) { bar.style.transition = 'width 4s linear'; bar.style.width = '100%'; }
+    if (bar) { bar.style.transition = 'width 5s linear'; bar.style.width = '100%'; }
   });
 
   _tt1Timer = setTimeout(() => {
     tt.style.opacity = '0';
     tt.style.transition = 'opacity .3s';
     setTimeout(() => { tt.remove(); showTT2(); }, 320);
-  }, 4000);
+  }, 5000);
 }
 
 function showTT2() {
@@ -629,14 +629,14 @@ function showTT2() {
   document.body.appendChild(tt);
   requestAnimationFrame(() => {
     const bar = document.getElementById('tut-bar2');
-    if (bar) { bar.style.transition = 'width 4s linear'; bar.style.width = '100%'; }
+    if (bar) { bar.style.transition = 'width 5s linear'; bar.style.width = '100%'; }
   });
 
   _tt2Timer = setTimeout(() => {
     tt.style.opacity = '0';
     tt.style.transition = 'opacity .3s';
     setTimeout(() => { tt.remove(); localStorage.setItem(TUTORIAL_KEY, 'seen'); }, 320);
-  }, 4000);
+  }, 5000);
 }
 
 function closeTTAll() {

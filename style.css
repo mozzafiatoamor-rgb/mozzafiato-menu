@@ -1086,6 +1086,7 @@ body.carrito-active .add-btn {
   background: rgba(237,232,220,.92);
   border: 1px solid rgba(139,122,82,.3);
   padding: 8px 12px 8px 14px;
+  border-radius: 24px;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 12px rgba(0,0,0,.15);
   transition: background .3s, border-color .3s;
