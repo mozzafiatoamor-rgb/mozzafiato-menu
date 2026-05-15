@@ -832,7 +832,7 @@ footer .footer-brand {
 .carrito-btn-clear:hover { border-color: #c0392b; color: #c0392b; }
 
 /* ── Tisana type picker modal ── */
-#tisana-picker {
+#tisana-picker, #generic-picker {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,.5);

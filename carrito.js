@@ -149,14 +149,49 @@ function injectAddButtons() {
     const rawName = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
     if (!rawName || rawName.length < 3) return;
 
-    /* Use data-categoria prefix if set on the element or its parent .dish-card */
     const categoria = el.dataset.categoria || el.closest('[data-categoria]')?.dataset.categoria || '';
-    const fullName = categoria ? categoria + ' · ' + rawName : rawName;
 
-    const btn = document.createElement('button');
-    btn.className = 'add-btn';
-    btn.setAttribute('aria-label', 'Agregar ' + fullName);
-    btn.innerHTML = '+';
+    // Waffle/Hotcake dulce — show type picker
+    if (el.dataset.waffleDulce) {
+      const btn = makeBtn('Agregar ' + rawName);
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showWafflePicker(el.dataset.waffleDulce);
+      });
+      el.appendChild(btn);
+      return;
+    }
+
+    const fullName = categoria ? categoria + ' · ' + rawName : rawName;
+    const btn = makeBtn('Agregar ' + fullName);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Tisana type picker
+      if (categoria === 'Tisana') { showTisanaPicker(rawName); return; }
+      addItem(fullName);
+      btn.classList.add('added');
+      setTimeout(() => btn.classList.remove('added'), 400);
+    });
+    el.appendChild(btn);
+  });
+
+  /* ── Latte picker (data-latte-sabor) ── */
+  document.querySelectorAll('[data-latte-sabor]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const sabor = el.dataset.latteSabor;
+    const btn = makeBtn('Agregar Latte · ' + sabor);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showLattePicker(sabor);
+    });
+    el.appendChild(btn);
+  });
+
+  /* ── Postre-name elements ── */
+  document.querySelectorAll('.postre-name[data-bev-item]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const fullName = el.dataset.bevItem;
+    const btn = makeBtn('Agregar ' + fullName);
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       addItem(fullName);
@@ -166,16 +201,12 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
-  /* ── Inject + buttons for beverage list items (data-bev-item) ── */
-  document.querySelectorAll('[data-bev-item]').forEach(el => {
+  /* ── Generic bev-item elements ── */
+  document.querySelectorAll('[data-bev-item]:not(.postre-name)').forEach(el => {
     if (el.querySelector('.add-btn')) return;
     const fullName = el.dataset.bevItem;
     if (!fullName) return;
-
-    const btn = document.createElement('button');
-    btn.className = 'add-btn';
-    btn.setAttribute('aria-label', 'Agregar ' + fullName);
-    btn.innerHTML = '+';
+    const btn = makeBtn('Agregar ' + fullName);
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       addItem(fullName);
@@ -185,47 +216,105 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
-  /* ── Tisana type-picker: show modal when data-categoria="Tisana" ── */
+  /* ── Tisana type-picker override ── */
   document.querySelectorAll('.dish-name[data-categoria="Tisana"]').forEach(el => {
     const addBtn = el.querySelector('.add-btn');
     if (!addBtn) return;
     const rawName = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
-
     addBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       showTisanaPicker(rawName);
-    }, true); /* capture phase to override the default addItem */
+    }, true);
   });
+}
+
+function makeBtn(label) {
+  const btn = document.createElement('button');
+  btn.className = 'add-btn';
+  btn.setAttribute('aria-label', label);
+  btn.innerHTML = '+';
+  return btn;
+}
+
+/* ── Latte/Cappuccino two-step picker ── */
+function showLattePicker(sabor) {
+  showGenericPicker({
+    title: sabor,
+    sub: '¿Tipo de bebida?',
+    options: ['Cappuccino', 'Latte'],
+    onSelect: (tipo) => {
+      showGenericPicker({
+        title: tipo + ' · ' + sabor,
+        sub: '¿Qué tamaño?',
+        options: [{ label: 'Mediano', note: '$85' }, { label: 'Grande', note: '$89' }],
+        onSelect: (tam) => addItem(tipo + ' ' + tam + ' · ' + sabor),
+      });
+    },
+  });
+}
+
+/* ── Waffle / Hotcake picker ── */
+function showWafflePicker(sabor) {
+  showGenericPicker({
+    title: sabor,
+    sub: '¿Waffle o Hotcake?',
+    options: ['Waffle', 'Hotcake'],
+    onSelect: (tipo) => addItem(tipo + ' · ' + sabor),
+  });
+}
+
+/* ── Generic two-step picker ── */
+function showGenericPicker({ title, sub, options, onSelect }) {
+  const existing = document.getElementById('generic-picker');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'generic-picker';
+
+  const btns = options.map(opt => {
+    const label = typeof opt === 'string' ? opt : opt.label;
+    const note  = typeof opt === 'string' ? ''  : opt.note;
+    return `<button onclick="genericPickerSelect('${label.replace(/'/g,"\\'")}')">
+      ${label}${note ? `<br><span>${note}</span>` : ''}
+    </button>`;
+  }).join('');
+
+  modal.innerHTML = `
+    <div class="tisana-picker-box">
+      <p class="tisana-picker-title">${title}</p>
+      <p class="tisana-picker-sub">${sub}</p>
+      <div class="tisana-picker-btns">${btns}</div>
+      <button class="tisana-picker-cancel" onclick="document.getElementById('generic-picker').remove()">Cancelar</button>
+    </div>`;
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  modal._onSelect = onSelect;
+  document.body.appendChild(modal);
+}
+
+function genericPickerSelect(value) {
+  const modal = document.getElementById('generic-picker');
+  const cb = modal?._onSelect;
+  modal?.remove();
+  if (cb) cb(value);
 }
 
 /* ── Tisana type picker ── */
 function showTisanaPicker(sabor) {
-  const existing = document.getElementById('tisana-picker');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'tisana-picker';
-  modal.innerHTML = `
-    <div class="tisana-picker-box">
-      <p class="tisana-picker-title">${sabor}</p>
-      <p class="tisana-picker-sub">¿En qué presentación?</p>
-      <div class="tisana-picker-btns">
-        <button onclick="chooseTisana('Tisana Caliente', '${sabor.replace(/'/g,"\\'")}')">Caliente<br><span>$99</span></button>
-        <button onclick="chooseTisana('Tisana Fría', '${sabor.replace(/'/g,"\\'")}')">Fría<br><span>$105</span></button>
-        <button onclick="chooseTisana('Smoothie Tisana', '${sabor.replace(/'/g,"\\'")}')">Smoothie<br><span>$115</span></button>
-      </div>
-      <button class="tisana-picker-cancel" onclick="document.getElementById('tisana-picker').remove()">Cancelar</button>
-    </div>
-  `;
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) modal.remove();
+  showGenericPicker({
+    title: sabor,
+    sub: '¿En qué presentación?',
+    options: [
+      { label: 'Caliente', note: '$99'  },
+      { label: 'Fría',     note: '$105' },
+      { label: 'Smoothie', note: '$115' },
+    ],
+    onSelect: (tipo) => addItem('Tisana ' + tipo + ' · ' + sabor),
   });
-  document.body.appendChild(modal);
 }
 
 function chooseTisana(tipo, sabor) {
-  const fullName = tipo + ' · ' + sabor;
-  addItem(fullName);
+  addItem(tipo + ' · ' + sabor);
   document.getElementById('tisana-picker')?.remove();
 }
 
