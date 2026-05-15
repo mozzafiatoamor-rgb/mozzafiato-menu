@@ -173,7 +173,7 @@ function closeCarrito() {
 
 /* ── Inject + buttons next to every dish name ── */
 function injectAddButtons() {
-  document.querySelectorAll('.dish-name').forEach(el => {
+  document.querySelectorAll('.dish-name:not(.no-add)').forEach(el => {
     if (el.querySelector('.add-btn')) return;
     const rawName = el.childNodes[0]?.textContent?.trim().replace(/\.$/, '');
     if (!rawName || rawName.length < 3) return;
