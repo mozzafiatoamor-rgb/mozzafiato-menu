@@ -361,10 +361,10 @@ function showPastaModal() {
   window.pastaSelect = (step, value) => {
     const s = document.getElementById('pasta-modal')?._state;
     if (!s) return;
-    if (step === 1) s.tipo = value;
-    if (step === 2) s.salsa = value;
-    if (step === 3) s.proteina = value;
-    render(step);
+    if (step === 1) { s.tipo = value;     setTimeout(() => render(2), 180); }
+    if (step === 2) { s.salsa = value;    setTimeout(() => render(3), 180); }
+    if (step === 3) { s.proteina = value; setTimeout(() => window.pastaConfirm(), 180); }
+    render(step); // re-render current step to show selection highlight first
   };
   window.pastaNext = (step) => {
     render(step);
