@@ -80,7 +80,6 @@ body::before {
 
 .sidebar nav a {
   display: flex;
-  align-items: center;
   gap: 10px;
   padding: 11px 22px;
   color: var(--footer-text);
@@ -90,6 +89,7 @@ body::before {
   letter-spacing: .02em;
   transition: background .2s, color .2s, padding-left .2s;
   border-left: 3px solid transparent;
+  align-items: flex-start;
 }
 
 .sidebar nav a:hover,
