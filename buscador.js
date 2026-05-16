@@ -193,6 +193,7 @@ function handlePickerFromSearch(item, btn) {
     } else window.location.href = item.page;
     return;
   }
+  if (item.picker === 'waffle') {
     if (typeof showWafflePicker === 'function') showWafflePicker(item.pickerName);
     else window.location.href = item.page;
     return;
