@@ -242,6 +242,26 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
+  /* ── Agua fresca picker (data-agua-sabor) ── */
+  document.querySelectorAll('[data-agua-sabor]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const sabor = el.dataset.aguaSabor;
+    const btn = makeBtn('Agregar Agua · ' + sabor);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showGenericPicker({
+        title: sabor,
+        sub: '¿Con qué agua?',
+        options: [
+          { label: 'Agua natural',  note: '$79' },
+          { label: 'Agua mineral',  note: '$89' },
+        ],
+        onSelect: (tipo) => addItem('Agua Fresca ' + tipo + ' · ' + sabor),
+      });
+    });
+    el.appendChild(btn);
+  });
+
   /* ── Latte picker (data-latte-sabor) ── */
   document.querySelectorAll('[data-latte-sabor]').forEach(el => {
     if (el.querySelector('.add-btn')) return;

@@ -179,7 +179,20 @@ function handlePickerFromSearch(item, btn) {
     else window.location.href = item.page;
     return;
   }
-  if (item.picker === 'waffle') {
+  if (item.picker === 'agua') {
+    if (typeof showGenericPicker === 'function') {
+      showGenericPicker({
+        title: item.pickerName,
+        sub: '¿Con qué agua?',
+        options: [
+          { label: 'Agua natural',  note: '$79' },
+          { label: 'Agua mineral',  note: '$89' },
+        ],
+        onSelect: (tipo) => addToCartFromSearch('Agua Fresca ' + tipo + ' · ' + item.pickerName),
+      });
+    } else window.location.href = item.page;
+    return;
+  }
     if (typeof showWafflePicker === 'function') showWafflePicker(item.pickerName);
     else window.location.href = item.page;
     return;
