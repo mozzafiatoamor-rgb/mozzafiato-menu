@@ -114,8 +114,7 @@
     .menu-card {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
-      gap: 12px;
+      justify-content: space-between;
       padding: 16px 24px;
       background: transparent;
       border-bottom: 1px solid rgba(139,122,82,.15);
@@ -124,7 +123,7 @@
       color: var(--gold-dark);
       font-family: 'Playfair Display', Georgia, serif;
       font-style: italic;
-      font-size: clamp(.8rem, 1.8vw, 1rem);
+      font-size: 1rem;
       letter-spacing: .01em;
       position: relative;
       overflow: hidden;
@@ -187,6 +186,18 @@
     <hr class="cover-line">
     <p class="cover-tagline">Elige una sección de nuestro menú</p>
 
+    <!-- BUSCADOR ESTÁTICO -->
+    <div id="index-buscador" style="width:100%;max-width:480px;margin:0 auto 24px;position:relative;z-index:10;">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.55);border:1px solid rgba(139,122,82,.3);border-radius:32px;padding:11px 20px;backdrop-filter:blur(6px);box-shadow:0 2px 16px rgba(139,122,82,.1);">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8b7a52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="index-search-input" type="search" autocomplete="off" autocorrect="off" spellcheck="false"
+          placeholder="¿Ya sabes qué ordenar? Busca aquí..."
+          style="flex:1;border:none;background:transparent;font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-style:italic;font-size:.92rem;color:var(--text);outline:none;">
+        <button id="index-search-clear" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:.85rem;opacity:.7;display:none">✕</button>
+      </div>
+      <div id="index-search-results" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg);border:1px solid rgba(139,122,82,.2);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:50;"></div>
+    </div>
+
 
     <div class="menu-grid">
       <a class="menu-card" href="page1.html"><span>Desayunos</span><span class="arrow">→</span></a>
@@ -212,5 +223,48 @@
   </a>
   <script src="menu.js"></script>
   <script src="carrito.js"></script>
+  <script src="menu-data.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const input   = document.getElementById('index-search-input');
+    const results = document.getElementById('index-search-results');
+    const clearBtn= document.getElementById('index-search-clear');
+    if (!input) return;
+
+    function normalize(s) {
+      return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'');
+    }
+    function highlight(text, q) {
+      const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+      return text.replace(re, '<mark style="background:rgba(139,122,82,.2);color:var(--gold-dark);border-radius:2px;padding:0 1px">$1</mark>');
+    }
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim();
+      clearBtn.style.display = q ? 'block' : 'none';
+      if (!q || typeof MENU_DATA === 'undefined') { results.style.display='none'; return; }
+      const matches = MENU_DATA.filter(i =>
+        [i.name,i.cat].some(s => normalize(s).includes(normalize(q)))
+      ).slice(0,5);
+      if (!matches.length) { results.style.display='none'; return; }
+      results.style.display = 'block';
+      results.innerHTML = matches.map(item => `
+        <div onclick="window.location.href='${item.page}'" style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid rgba(139,122,82,.1);cursor:pointer;transition:background .15s;gap:12px" onmouseover="this.style.background='rgba(139,122,82,.07)'" onmouseout="this.style.background=''">
+          <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+            <span style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.9rem;color:var(--gold-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(item.name, q)}</span>
+            <span style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px">${item.cat}</span>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b7a52" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>`).join('');
+    });
+
+    clearBtn.addEventListener('click', () => {
+      input.value = ''; results.style.display='none'; clearBtn.style.display='none'; input.focus();
+    });
+    document.addEventListener('click', e => {
+      if (!document.getElementById('index-buscador')?.contains(e.target)) results.style.display='none';
+    });
+  });
+  </script>
 </body>
 </html>

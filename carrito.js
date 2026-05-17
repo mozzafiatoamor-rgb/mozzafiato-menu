@@ -916,11 +916,8 @@ function buildBuscadorPill() {
     document.head.appendChild(s);
   }
 
-  const savedPos = JSON.parse(localStorage.getItem(PILL_POS_KEY) || 'null');
-  const defaultX = Math.round(window.innerWidth / 2 - 22); /* center as circle */
-  const defaultY = window.innerHeight - 80;
-  const startX = savedPos ? savedPos.x : defaultX;
-  const startY = savedPos ? savedPos.y : defaultY;
+  const startX = Math.round(window.innerWidth / 2 - 22);
+  const startY = window.innerHeight - 90;
 
   const pill = document.createElement('div');
   pill.id = 'buscador-pill';
@@ -1084,29 +1081,37 @@ function buildBuscadorPill() {
     if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
   });
 
+  /* Fixed home position — bottom center like image 2 */
+  const HOME_X = Math.round(window.innerWidth / 2 - 22);
+  const HOME_Y = window.innerHeight - 90;
+
+  pill.style.left = HOME_X + 'px';
+  pill.style.top  = HOME_Y + 'px';
+
   /* Always start collapsed on menu pages */
   pill.classList.add('collapsed');
   let isCollapsed = true;
   let scrollTimer = null;
-  let savedLeft = pill.style.left;
 
   function collapsePill() {
     if (isCollapsed || panelOpen) return;
     isCollapsed = true;
-    savedLeft = pill.style.left; /* save current position */
     pill.classList.add('collapsed');
-    /* Restore to saved drag position */
-    pill.style.left = savedLeft;
+    /* Animate back to home position */
+    pill.style.transition = 'left .4s cubic-bezier(.4,0,.2,1), top .4s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1), border-radius .3s cubic-bezier(.4,0,.2,1), padding .3s cubic-bezier(.4,0,.2,1)';
+    pill.style.left = HOME_X + 'px';
+    pill.style.top  = HOME_Y + 'px';
+    setTimeout(() => { pill.style.transition = ''; }, 420);
   }
 
   function expandPill() {
     if (!isCollapsed) return;
     isCollapsed = false;
     pill.classList.remove('collapsed');
-    /* Make sure pill is fully on screen after expanding */
-    const rect = pill.getBoundingClientRect();
-    const pillExpandedW = 260;
-    if (rect.left + pillExpandedW > window.innerWidth - 8) {
+    /* Make sure text fits on screen */
+    const pillExpandedW = 270;
+    const left = parseFloat(pill.style.left) || HOME_X;
+    if (left + pillExpandedW > window.innerWidth - 8) {
       pill.style.left = Math.max(8, window.innerWidth - pillExpandedW - 8) + 'px';
     }
   }
