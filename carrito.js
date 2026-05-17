@@ -765,7 +765,7 @@ function buildBuscadorPill() {
   pill.style.left = startX + 'px';
   pill.style.top  = startY + 'px';
   pill.innerHTML = `
-    <i id="buscador-pill-icon" class="ti ti-search" aria-hidden="true"></i>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8b7a52" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;pointer-events:none"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <span id="buscador-pill-text">¿Ya sabes qué ordenar? Busca aquí...</span>
   `;
   document.body.appendChild(pill);
@@ -774,7 +774,7 @@ function buildBuscadorPill() {
   panel.id = 'buscador-panel';
   panel.innerHTML = `
     <div id="buscador-input-row">
-      <i class="ti ti-search" style="color:var(--gold);font-size:16px;flex-shrink:0" aria-hidden="true"></i>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="buscador-field" type="search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Platillo, bebida, categoría...">
       <button id="buscador-close-btn" aria-label="Cerrar">✕</button>
     </div>
@@ -789,7 +789,6 @@ function buildBuscadorPill() {
   let dragStartX, dragStartY, pillStartX, pillStartY;
 
   function positionPanel() {
-    /* Make panel visible off-screen to measure it */
     panel.style.visibility = 'hidden';
     panel.style.display = 'block';
     const pr  = pill.getBoundingClientRect();
@@ -800,16 +799,29 @@ function buildBuscadorPill() {
     panel.style.visibility = '';
     panel.style.display = '';
 
-    /* Prefer above pill, fallback below */
     const spaceAbove = pr.top - 12;
     const spaceBelow = vh - pr.bottom - 12;
-    let y = spaceAbove >= ph ? pr.top - ph - 8 : pr.bottom + 8;
 
-    /* Center horizontally on pill, clamp to viewport */
+    let y, pillNudge = 0;
+
+    if (spaceAbove >= ph) {
+      /* Enough space above — panel goes above pill */
+      y = pr.top - ph - 8;
+    } else if (spaceBelow >= ph) {
+      /* Enough space below — panel goes below pill */
+      y = pr.bottom + 8;
+    } else {
+      /* Not enough space either side — nudge pill to top, panel below header */
+      pillNudge = 70;
+      pill.style.transition = 'top .35s cubic-bezier(.4,0,.2,1)';
+      pill.style.top = pillNudge + 'px';
+      setTimeout(() => { pill.style.transition = ''; }, 380);
+      y = pillNudge + pill.offsetHeight + 8;
+    }
+
     let x = pr.left + pr.width / 2 - pw / 2;
     x = Math.max(8, Math.min(x, vw - pw - 8));
     y = Math.max(8, Math.min(y, vh - ph - 8));
-
     panel.style.left = x + 'px';
     panel.style.top  = y + 'px';
   }
@@ -818,6 +830,8 @@ function buildBuscadorPill() {
     panelOpen = true;
     pill.classList.add('open');
     panel.classList.add('open');
+    const svg = pill.querySelector('svg');
+    if (svg) svg.setAttribute('stroke', '#ede8dc');
     positionPanel();
     setTimeout(() => document.getElementById('buscador-field')?.focus(), 80);
   }
@@ -826,6 +840,8 @@ function buildBuscadorPill() {
     panelOpen = false;
     pill.classList.remove('open');
     panel.classList.remove('open');
+    const svg = pill.querySelector('svg');
+    if (svg) svg.setAttribute('stroke', '#8b7a52');
     const field = document.getElementById('buscador-field');
     if (field) { field.value = ''; renderBuscadorResults(''); }
   }
