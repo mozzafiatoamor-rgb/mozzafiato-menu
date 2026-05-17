@@ -1094,6 +1094,17 @@ function buildBuscadorPill() {
     if (!isCollapsed) return;
     isCollapsed = false;
     pill.classList.remove('collapsed');
+
+    /* Expand toward side with more space */
+    const rect = pill.getBoundingClientRect();
+    const midX = window.innerWidth / 2;
+    if (rect.left + rect.width / 2 > midX) {
+      /* Pill is on the right — text grows left */
+      pill.style.flexDirection = 'row-reverse';
+    } else {
+      /* Pill is on the left — text grows right */
+      pill.style.flexDirection = 'row';
+    }
   }
 
   window.addEventListener('scroll', () => {
