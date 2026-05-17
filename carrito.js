@@ -35,6 +35,8 @@ function removeItem(name) {
   saveCart(cart);
   renderPanel();
   updateBadge();
+  // Keep panel open after removing item
+  document.getElementById('carrito-panel')?.classList.add('open');
 }
 
 function changeQty(name, delta) {
@@ -49,12 +51,15 @@ function changeQty(name, delta) {
   saveCart(cart);
   renderPanel();
   updateBadge();
+  // Keep panel open after changing qty
+  document.getElementById('carrito-panel')?.classList.add('open');
 }
 
 function clearCart() {
   localStorage.removeItem(STORAGE_KEY);
   renderPanel();
   updateBadge();
+  document.getElementById('carrito-panel')?.classList.add('open');
 }
 
 function totalItems() {
@@ -212,16 +217,15 @@ function openCarrito() {
   updateToggleUI();
   document.getElementById('carrito-panel').classList.add('open');
   document.body.style.overflow = '';
-  // Close on outside click
+  // Delay listener so the opening click doesn't immediately close it
   setTimeout(() => {
     document.addEventListener('click', outsideCarritoClick);
-  }, 10);
+  }, 200);
 }
 
 function outsideCarritoClick(e) {
   const panel = document.getElementById('carrito-panel');
   const fab   = document.getElementById('carrito-fab');
-  // Ignore clicks inside the panel itself (remove, qty buttons, etc.)
   if (panel?.contains(e.target)) return;
   if (fab?.contains(e.target)) return;
   closeCarrito();
