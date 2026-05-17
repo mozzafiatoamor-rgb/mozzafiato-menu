@@ -720,21 +720,25 @@ footer .footer-brand {
 .carrito-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
   padding: 14px 14px 10px;
   border-bottom: 1px solid rgba(196,173,130,.12);
   background: transparent;
   flex-shrink: 0;
+  position: relative;
 }
 .carrito-logo {
-  width: 28px;
+  width: 36px;
   filter: brightness(0) invert(1) sepia(1) brightness(1.8);
 }
 .carrito-title {
   font-family: 'Great Vibes', cursive;
   font-size: 1.55rem;
   color: #ede8dc;
-  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
 }
 .carrito-close {
   background: none;

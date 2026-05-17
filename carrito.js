@@ -1035,7 +1035,12 @@ function buildBuscadorPill() {
   pill.addEventListener('mousedown', (e) => {
     isDragging = true; dragMoved = false;
     dragStartX = e.clientX; dragStartY = e.clientY;
-    pillStartX = pill.offsetLeft; pillStartY = pill.offsetTop;
+    const rect = pill.getBoundingClientRect();
+    pillStartX = rect.left; pillStartY = rect.top;
+    pill.style.left   = rect.left + 'px';
+    pill.style.top    = rect.top  + 'px';
+    pill.style.right  = '';
+    pill.style.bottom = '';
     e.preventDefault();
   });
   document.addEventListener('mousemove', (e) => {
@@ -1049,19 +1054,19 @@ function buildBuscadorPill() {
     pill.style.left = x + 'px'; pill.style.top = y + 'px';
     if (panelOpen) positionPanel();
   });
-  document.addEventListener('mouseup', () => {
-    if (isDragging) {
-      isDragging = false;
-      if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
-    }
-  });
+  document.addEventListener('mouseup', () => { isDragging = false; });
 
   /* ── Drag — touch ── */
   pill.addEventListener('touchstart', (e) => {
     isDragging = true; dragMoved = false;
     const t = e.touches[0];
     dragStartX = t.clientX; dragStartY = t.clientY;
-    pillStartX = pill.offsetLeft; pillStartY = pill.offsetTop;
+    const rect = pill.getBoundingClientRect();
+    pillStartX = rect.left; pillStartY = rect.top;
+    pill.style.left   = rect.left + 'px';
+    pill.style.top    = rect.top  + 'px';
+    pill.style.right  = '';
+    pill.style.bottom = '';
   }, { passive: true });
   pill.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
@@ -1076,17 +1081,17 @@ function buildBuscadorPill() {
     pill.style.left = x + 'px'; pill.style.top = y + 'px';
     if (panelOpen) positionPanel();
   }, { passive: false });
-  pill.addEventListener('touchend', () => {
-    isDragging = false;
-    if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
-  });
+  pill.addEventListener('touchend', () => { isDragging = false; });
 
   /* Fixed home position — right side above play/tutorial button */
-  const HOME_X = window.innerWidth - 58;
-  const HOME_Y = window.innerHeight - 192;
+  const HOME_RIGHT  = 11; /* px from right edge */
+  const HOME_BOTTOM = 192; /* px from bottom — above play btn at 140px */
 
-  pill.style.left = HOME_X + 'px';
-  pill.style.top  = HOME_Y + 'px';
+  pill.style.position = 'fixed';
+  pill.style.right  = HOME_RIGHT + 'px';
+  pill.style.bottom = HOME_BOTTOM + 'px';
+  pill.style.left   = '';
+  pill.style.top    = '';
 
   /* Always start collapsed on menu pages */
   pill.classList.add('collapsed');
@@ -1098,9 +1103,11 @@ function buildBuscadorPill() {
     isCollapsed = true;
     pill.classList.add('collapsed');
     /* Animate back to home position */
-    pill.style.transition = 'left .4s cubic-bezier(.4,0,.2,1), top .4s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1), border-radius .3s cubic-bezier(.4,0,.2,1), padding .3s cubic-bezier(.4,0,.2,1)';
-    pill.style.left = HOME_X + 'px';
-    pill.style.top  = HOME_Y + 'px';
+    pill.style.transition = 'right .4s cubic-bezier(.4,0,.2,1), bottom .4s cubic-bezier(.4,0,.2,1), left .4s cubic-bezier(.4,0,.2,1), top .4s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1), border-radius .3s cubic-bezier(.4,0,.2,1), padding .3s cubic-bezier(.4,0,.2,1)';
+    pill.style.right  = HOME_RIGHT + 'px';
+    pill.style.bottom = HOME_BOTTOM + 'px';
+    pill.style.left   = '';
+    pill.style.top    = '';
     setTimeout(() => { pill.style.transition = ''; }, 420);
   }
 
@@ -1108,12 +1115,6 @@ function buildBuscadorPill() {
     if (!isCollapsed) return;
     isCollapsed = false;
     pill.classList.remove('collapsed');
-    /* Make sure text fits on screen */
-    const pillExpandedW = 270;
-    const left = parseFloat(pill.style.left) || HOME_X;
-    if (left + pillExpandedW > window.innerWidth - 8) {
-      pill.style.left = Math.max(8, window.innerWidth - pillExpandedW - 8) + 'px';
-    }
   }
 
   window.addEventListener('scroll', () => {
