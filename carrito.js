@@ -269,6 +269,24 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
+  /* ── Extra items and price-row (page10) ── */
+  document.querySelectorAll('.extra-item, .price-row').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    if (el.dataset.bevItem) return; /* already handled */
+    const nameEl = el.querySelector('span');
+    if (!nameEl) return;
+    const name = nameEl.textContent.trim();
+    if (!name || name.length < 3) return;
+    const btn = makeBtn('Agregar ' + name);
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addItem(name);
+      btn.classList.add('added');
+      setTimeout(() => btn.classList.remove('added'), 400);
+    });
+    el.appendChild(btn);
+  });
+
   /* ── Latte picker (data-latte-sabor) ── */
   document.querySelectorAll('[data-latte-sabor]').forEach(el => {
     if (el.querySelector('.add-btn')) return;
@@ -740,7 +758,6 @@ function buildCartDOM() {
     </label>
   `;
   document.body.appendChild(modeBtn);
-   
 
   document.body.appendChild(panel);
 
@@ -1022,8 +1039,8 @@ document.addEventListener('DOMContentLoaded', () => {
   injectAddButtons();
   updateBadge();
   buildTutorial();
+  updateToggleUI(); // ← fix: restore toggle visual state on every page load
 
-  // Restore active mode across pages
   if (isActiveMode()) {
     document.body.classList.add('carrito-active');
   }
