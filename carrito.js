@@ -906,6 +906,10 @@ const PILL_POS_KEY    = 'mozzafiato_pill_pos';
 const PILL_SEEN_KEY   = 'mozzafiato_pill_seen';
 
 function buildBuscadorPill() {
+  /* Skip floating pill on index — it has its own static search bar */
+  const onIndex = location.pathname.endsWith('index.html') || location.pathname.endsWith('/');
+  if (onIndex) return;
+
   if (typeof MENU_DATA === 'undefined') {
     const s = document.createElement('script');
     s.src = 'menu-data.js';
@@ -913,7 +917,7 @@ function buildBuscadorPill() {
   }
 
   const savedPos = JSON.parse(localStorage.getItem(PILL_POS_KEY) || 'null');
-  const defaultX = Math.round(window.innerWidth / 2 - 130);
+  const defaultX = Math.round(window.innerWidth / 2 - 22); /* center as circle */
   const defaultY = window.innerHeight - 80;
   const startX = savedPos ? savedPos.x : defaultX;
   const startY = savedPos ? savedPos.y : defaultY;
@@ -1080,33 +1084,30 @@ function buildBuscadorPill() {
     if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
   });
 
-  /* ── Collapse on scroll, expand on click ── */
+  /* Always start collapsed on menu pages */
+  pill.classList.add('collapsed');
+  let isCollapsed = true;
   let scrollTimer = null;
-  let isCollapsed = false;
+  let savedLeft = pill.style.left;
 
   function collapsePill() {
     if (isCollapsed || panelOpen) return;
     isCollapsed = true;
+    savedLeft = pill.style.left; /* save current position */
     pill.classList.add('collapsed');
+    /* Restore to saved drag position */
+    pill.style.left = savedLeft;
   }
 
   function expandPill() {
     if (!isCollapsed) return;
     isCollapsed = false;
     pill.classList.remove('collapsed');
-
+    /* Make sure pill is fully on screen after expanding */
     const rect = pill.getBoundingClientRect();
-    const pillW = 260; /* approximate expanded width */
-    const midX = window.innerWidth / 2;
-    const onRight = rect.left + rect.width / 2 > midX;
-
-    if (onRight) {
-      /* Move pill left so text fits on screen */
-      const newLeft = Math.max(8, rect.right - pillW);
-      pill.style.left = newLeft + 'px';
-      pill.style.flexDirection = 'row';
-    } else {
-      pill.style.flexDirection = 'row';
+    const pillExpandedW = 260;
+    if (rect.left + pillExpandedW > window.innerWidth - 8) {
+      pill.style.left = Math.max(8, window.innerWidth - pillExpandedW - 8) + 'px';
     }
   }
 
@@ -1114,12 +1115,24 @@ function buildBuscadorPill() {
     if (panelOpen) return;
     collapsePill();
     clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(expandPill, 2000);
   }, { passive: true });
 
-  /* Also expand when tapping the collapsed pill */
+  /* Tap to expand when collapsed, open panel when expanded */
   pill.addEventListener('click', () => {
-    if (isCollapsed && !dragMoved) expandPill();
+    if (dragMoved) return;
+    if (isCollapsed) {
+      expandPill();
+    } else {
+      panelOpen ? closePanel() : openPanel();
+    }
+  });
+
+  /* Close panel and collapse when clicking outside */
+  document.addEventListener('click', (e) => {
+    if (!pill.contains(e.target) && !panel.contains(e.target)) {
+      if (panelOpen) closePanel();
+      if (!isCollapsed) setTimeout(collapsePill, 300);
+    }
   });
   if (localStorage.getItem(PILL_SEEN_KEY) !== 'seen') {
     localStorage.setItem(PILL_SEEN_KEY, 'seen');

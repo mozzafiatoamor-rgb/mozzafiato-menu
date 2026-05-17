@@ -1206,7 +1206,7 @@ body.carrito-active .add-btn {
   white-space: nowrap;
   z-index: 310;
   box-shadow: 0 3px 16px rgba(0,0,0,.15);
-  transition: box-shadow .2s, background .2s, padding .35s cubic-bezier(.4,0,.2,1), gap .35s cubic-bezier(.4,0,.2,1);
+  transition: box-shadow .2s, background .2s, padding .3s cubic-bezier(.4,0,.2,1), gap .3s cubic-bezier(.4,0,.2,1), width .3s cubic-bezier(.4,0,.2,1), height .3s cubic-bezier(.4,0,.2,1), border-radius .3s cubic-bezier(.4,0,.2,1);
   user-select: none;
   touch-action: none;
   overflow: hidden;
@@ -1214,8 +1214,13 @@ body.carrito-active .add-btn {
 #buscador-pill:active { cursor: grabbing; box-shadow: 0 6px 24px rgba(0,0,0,.22); }
 #buscador-pill.open { background: rgba(94,79,48,.92); }
 #buscador-pill.collapsed {
-  padding: 10px;
+  padding: 0;
   gap: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
 }
 #buscador-pill-icon { color: #8b7a52; font-size: 17px; flex-shrink: 0; pointer-events: none; }
 #buscador-pill.open #buscador-pill-icon { color: #ede8dc; }
