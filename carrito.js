@@ -846,6 +846,13 @@ function buildBuscadorPill() {
     if (field) { field.value = ''; renderBuscadorResults(''); }
   }
 
+  /* ── Auto-reposition when panel grows (results appear) ── */
+  if (window.ResizeObserver) {
+    new ResizeObserver(() => {
+      if (panelOpen) positionPanel();
+    }).observe(panel);
+  }
+
   /* Toggle on tap (not drag) */
   pill.addEventListener('click', () => {
     if (dragMoved) return;
