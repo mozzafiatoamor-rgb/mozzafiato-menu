@@ -1213,7 +1213,11 @@ function buscadorGoTo(page) { window.location.href = page; }
 
 function buscadorAdd(item, btn) {
   if (item.type === 'picker') {
-    if (item.picker === 'pasta'  && typeof showPastaModal    === 'function') { showPastaModal(); return; }
+    if (item.picker === 'americano') {
+    if (typeof showAmericanoPicker === 'function') showAmericanoPicker();
+    else window.location.href = item.page;
+    return;
+  }
     if (item.picker === 'latte'  && typeof showLattePicker   === 'function') { showLattePicker(item.pickerName); return; }
     if (item.picker === 'waffle' && typeof showWafflePicker  === 'function') { showWafflePicker(item.pickerName); return; }
     if (item.picker === 'tisana' && typeof showGenericPicker === 'function') {

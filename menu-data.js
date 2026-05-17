@@ -11,7 +11,7 @@ const MENU_DATA = [
 
   /* ── DESAYUNOS ── */
   { name: 'Desayuno completo',            cat: 'Paquetes',         page: 'page1.html', cartName: 'Paquete · Desayuno completo' },
-  { name: 'Desayuno americano',           cat: 'Paquetes',         page: 'page1.html', cartName: 'Paquete · Desayuno americano' },
+  { name: 'Desayuno americano',           cat: 'Paquetes',         page: 'page1.html', type: 'picker', picker: 'americano' },
   { name: 'Combo continental',            cat: 'Paquetes',         page: 'page1.html', cartName: 'Paquete · Combo continental' },
   { name: 'Combo niños',                  cat: 'Paquetes',         page: 'page1.html', cartName: 'Paquete · Combo niños' },
   { name: 'Huevos al gusto',              cat: 'Huevos',           page: 'page1.html', cartName: 'Huevos · Huevos al gusto' },
