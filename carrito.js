@@ -740,7 +740,7 @@ function buildCartDOM() {
     </label>
   `;
   document.body.appendChild(modeBtn);
-   setTimeout(() => { modeBtn.style.left = Math.round((window.innerWidth - modeBtn.offsetWidth) / 2) + 'px'; }, 100);
+   
 
   document.body.appendChild(panel);
 
