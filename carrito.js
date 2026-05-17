@@ -1080,7 +1080,33 @@ function buildBuscadorPill() {
     if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
   });
 
-  /* ── First-visit attention animation ── */
+  /* ── Collapse on scroll, expand on click ── */
+  let scrollTimer = null;
+  let isCollapsed = false;
+
+  function collapsePill() {
+    if (isCollapsed || panelOpen) return;
+    isCollapsed = true;
+    pill.classList.add('collapsed');
+  }
+
+  function expandPill() {
+    if (!isCollapsed) return;
+    isCollapsed = false;
+    pill.classList.remove('collapsed');
+  }
+
+  window.addEventListener('scroll', () => {
+    if (panelOpen) return;
+    collapsePill();
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(expandPill, 2000);
+  }, { passive: true });
+
+  /* Also expand when tapping the collapsed pill */
+  pill.addEventListener('click', () => {
+    if (isCollapsed && !dragMoved) expandPill();
+  });
   if (localStorage.getItem(PILL_SEEN_KEY) !== 'seen') {
     localStorage.setItem(PILL_SEEN_KEY, 'seen');
     setTimeout(() => {
