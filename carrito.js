@@ -191,14 +191,19 @@ function toggleMode() {
 }
 
 function updateToggleUI() {
-  const toggle = document.getElementById('mode-toggle');
-  const label  = document.getElementById('mode-fab-label');
   const fab    = document.getElementById('mode-fab');
-  if (!toggle) return;
+  const label  = document.getElementById('mode-fab-label');
+  const svg    = document.getElementById('mode-fab-svg');
+  if (!fab) return;
   const active = isActiveMode();
-  toggle.checked = active;
+  fab.classList.toggle('mode-active', active);
   if (label) label.textContent = active ? 'Modo activo' : 'Modo pedido';
-  if (fab) fab.classList.toggle('mode-active', active);
+  if (svg) {
+    svg.setAttribute('stroke', active ? '#ede8dc' : '#8b7a52');
+    svg.innerHTML = active
+      ? '<path d="M20 6L9 17l-5-5"/>'   /* checkmark when active */
+      : '<path d="M12 5v14M5 12h14"/>'; /* plus when inactive */
+  }
 }
 
 /* ── Open / Close panel ── */
@@ -277,10 +282,12 @@ function injectAddButtons() {
     if (!nameEl) return;
     const name = nameEl.textContent.trim();
     if (!name || name.length < 3) return;
-    const btn = makeBtn('Agregar ' + name);
+    const categoria = nameEl.dataset.categoria || '';
+    const fullName = categoria ? categoria + ' · ' + name : name;
+    const btn = makeBtn('Agregar ' + fullName);
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      addItem(name);
+      addItem(fullName);
       btn.classList.add('added');
       setTimeout(() => btn.classList.remove('added'), 400);
     });
@@ -565,15 +572,8 @@ let _tt1Timer = null;
 let _tt2Timer = null;
 
 function buildTutorial() {
-  const helpBtn = document.createElement('button');
-  helpBtn.id = 'tutorial-help-btn';
-  helpBtn.setAttribute('aria-label', 'Ayuda');
-  helpBtn.textContent = '?';
-  helpBtn.addEventListener('click', startTutorial);
-  document.body.appendChild(helpBtn);
-
   if (localStorage.getItem(TUTORIAL_KEY) !== 'seen') {
-    setTimeout(startTutorial, 900);
+    setTimeout(() => startTutorial(), 900);
   }
 }
 
@@ -750,14 +750,31 @@ function buildCartDOM() {
   /* Floating mode toggle button */
   const modeBtn = document.createElement('div');
   modeBtn.id = 'mode-fab';
+  modeBtn.setAttribute('role', 'button');
+  modeBtn.setAttribute('aria-label', 'Modo pedido');
   modeBtn.innerHTML = `
+    <div id="mode-fab-circle">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b7a52" stroke-width="2.5" stroke-linecap="round" id="mode-fab-svg"><path d="M12 5v14M5 12h14"/></svg>
+    </div>
     <span id="mode-fab-label">Modo pedido</span>
-    <label class="carrito-toggle">
-      <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
-      <span class="carrito-toggle-track"><span class="carrito-toggle-thumb"></span></span>
-    </label>
   `;
+  modeBtn.addEventListener('click', toggleMode);
   document.body.appendChild(modeBtn);
+
+  /* Tutorial play button */
+  const playBtn = document.createElement('div');
+  playBtn.id = 'tutorial-play-btn';
+  playBtn.setAttribute('role', 'button');
+  playBtn.setAttribute('aria-label', 'Ver tutorial');
+  playBtn.title = 'Volver a ver el mini tutorial';
+  playBtn.innerHTML = `
+    <div id="tutorial-play-circle">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="#8b7a52" stroke="none"><polygon points="5,3 19,12 5,21"/></svg>
+    </div>
+    <span id="tutorial-play-label">Tutorial</span>
+  `;
+  playBtn.addEventListener('click', startTutorial);
+  document.body.appendChild(playBtn);
 
   document.body.appendChild(panel);
 
