@@ -1079,7 +1079,6 @@ body.carrito-active .add-btn {
   position: fixed;
   top: 14px;
   left: 50%;
-  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 8px;
