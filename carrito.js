@@ -211,15 +211,28 @@ function openCarrito() {
   renderPanel();
   updateToggleUI();
   document.getElementById('carrito-panel').classList.add('open');
-  document.getElementById('carrito-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  document.body.style.overflow = '';
+  // Close on outside click
+  setTimeout(() => {
+    document.addEventListener('click', outsideCarritoClick);
+  }, 10);
+}
+
+function outsideCarritoClick(e) {
+  const panel = document.getElementById('carrito-panel');
+  const fab   = document.getElementById('carrito-fab');
+  if (panel && !panel.contains(e.target) && !fab?.contains(e.target)) {
+    closeCarrito();
+  }
 }
 
 function closeCarrito() {
   document.getElementById('carrito-panel').classList.remove('open');
   document.getElementById('carrito-overlay').classList.remove('open');
   document.body.style.overflow = '';
+  document.removeEventListener('click', outsideCarritoClick);
 }
+
 
 /* ── Inject + buttons next to every dish name ── */
 function injectAddButtons() {

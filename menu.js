@@ -7,23 +7,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebar   = document.querySelector('.sidebar');
   const overlay   = document.querySelector('.sidebar-overlay');
 
+  /* Inject close button inside sidebar logo area */
+  const logoArea = sidebar?.querySelector('.sidebar-logo');
+  if (logoArea && !logoArea.querySelector('.sidebar-close')) {
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'sidebar-close';
+    closeBtn.setAttribute('aria-label', 'Cerrar menú');
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', closeSidebar);
+    logoArea.appendChild(closeBtn);
+  }
+
   function openSidebar() {
     sidebar.classList.add('open');
     overlay.classList.add('open');
     hamburger.classList.add('open');
-    document.body.style.overflow = 'hidden';
   }
   function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.classList.remove('open');
     hamburger.classList.remove('open');
-    document.body.style.overflow = '';
   }
 
-  hamburger?.addEventListener('click', () => {
+  hamburger?.addEventListener('click', (e) => {
+    e.stopPropagation();
     sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
   });
+
+  /* Close on overlay click or outside click */
   overlay?.addEventListener('click', closeSidebar);
+  document.addEventListener('click', (e) => {
+    if (sidebar?.classList.contains('open') &&
+        !sidebar.contains(e.target) &&
+        !hamburger?.contains(e.target)) {
+      closeSidebar();
+    }
+  });
 
   /* Mark active nav link */
   const currentPage = location.pathname.split('/').pop() || 'index.html';
@@ -37,14 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.food-img-wrap').forEach(wrap => {
     const illustrationSrc = wrap.querySelector('img').src;
-
-    /* Extract illustration number e.g. .../images/6.png → 6 */
     const match = illustrationSrc.match(/images\/(\d+)\.(png|jpg|jpeg)$/i);
     if (!match) return;
-
     const num = match[1];
 
-    /* Try JPG first, then PNG — add label only when one loads */
     function tryLoad(ext, fallbackExt) {
       const src = 'images/foto_' + num + '.' + ext;
       const testImg = new Image();
@@ -57,12 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
           wrap.appendChild(label);
         }
       };
-      testImg.onerror = () => {
-        if (fallbackExt) tryLoad(fallbackExt, null);
-      };
+      testImg.onerror = () => { if (fallbackExt) tryLoad(fallbackExt, null); };
       testImg.src = src;
     }
-
     tryLoad('jpg', 'png');
 
     wrap.addEventListener('click', () => {
@@ -72,12 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  lb?.addEventListener('click', () => {
-    lb.classList.remove('open');
-    lbImg.src = '';
-  });
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') lb?.classList.remove('open');
-  });
+  lb?.addEventListener('click', () => { lb.classList.remove('open'); lbImg.src = ''; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') lb?.classList.remove('open'); });
 });
