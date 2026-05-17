@@ -916,8 +916,8 @@ function buildBuscadorPill() {
     document.head.appendChild(s);
   }
 
-  const startX = Math.round(window.innerWidth / 2 - 22);
-  const startY = window.innerHeight - 90;
+  const startX = window.innerWidth - 58; /* right side */
+  const startY = window.innerHeight - 192; /* above play button */
 
   const pill = document.createElement('div');
   pill.id = 'buscador-pill';
@@ -1081,9 +1081,9 @@ function buildBuscadorPill() {
     if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
   });
 
-  /* Fixed home position — bottom center like image 2 */
-  const HOME_X = Math.round(window.innerWidth / 2 - 22);
-  const HOME_Y = window.innerHeight - 90;
+  /* Fixed home position — right side above play/tutorial button */
+  const HOME_X = window.innerWidth - 58;
+  const HOME_Y = window.innerHeight - 192;
 
   pill.style.left = HOME_X + 'px';
   pill.style.top  = HOME_Y + 'px';

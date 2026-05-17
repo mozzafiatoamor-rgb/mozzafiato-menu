@@ -121,6 +121,7 @@ body::before {
   letter-spacing: .01em;
   transition: background .2s, color .2s;
   border-left: 2px solid transparent;
+  text-align: left;
 }
 
 .sidebar nav a:hover,
