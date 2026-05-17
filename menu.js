@@ -22,11 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
     sidebar.classList.add('open');
     overlay.classList.add('open');
     hamburger.classList.add('open');
+    document.getElementById('buscador-pill')?.style.setProperty('display','none');
   }
   function closeSidebar() {
     sidebar.classList.remove('open');
     overlay.classList.remove('open');
     hamburger.classList.remove('open');
+    document.getElementById('buscador-pill')?.style.removeProperty('display');
   }
 
   hamburger?.addEventListener('click', (e) => {
