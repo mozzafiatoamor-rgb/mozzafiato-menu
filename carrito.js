@@ -272,8 +272,8 @@ function injectAddButtons() {
   /* ── Extra items and price-row (page10) ── */
   document.querySelectorAll('.extra-item, .price-row').forEach(el => {
     if (el.querySelector('.add-btn')) return;
-    if (el.dataset.bevItem) return; /* already handled */
-    const nameEl = el.querySelector('span');
+    if (el.dataset.bevItem) return;
+    const nameEl = el.querySelector('span') || el.querySelector('strong');
     if (!nameEl) return;
     const name = nameEl.textContent.trim();
     if (!name || name.length < 3) return;
