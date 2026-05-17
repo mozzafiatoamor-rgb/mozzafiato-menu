@@ -235,34 +235,62 @@
       return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'');
     }
     function highlight(text, q) {
+      if (!q) return text;
       const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
       return text.replace(re, '<mark style="background:rgba(139,122,82,.2);color:var(--gold-dark);border-radius:2px;padding:0 1px">$1</mark>');
+    }
+
+    function renderResults(q) {
+      if (!q || typeof MENU_DATA === 'undefined') { results.style.display='none'; return; }
+      const matches = MENU_DATA.filter(i =>
+        [i.name, i.cat].some(s => normalize(s).includes(normalize(q)))
+      ).slice(0, 5);
+      if (!matches.length) { results.style.display='none'; return; }
+
+      results.style.display = 'block';
+      results.innerHTML = '';
+      matches.forEach(item => {
+        const isPicker = item.type === 'picker';
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid rgba(139,122,82,.1);cursor:pointer;transition:background .15s;gap:12px';
+        row.innerHTML = `
+          <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+            <span style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.9rem;color:var(--gold-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(item.name, q)}</span>
+            <span style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px">${item.cat}</span>
+          </div>
+          <button style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold-dark);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s,color .2s">${isPicker ? '⚙' : '+'}</button>
+        `;
+        /* Click row → go to page */
+        row.addEventListener('click', (e) => {
+          if (e.target.tagName === 'BUTTON') return;
+          window.location.href = item.page;
+        });
+        /* Click button → add to cart or open picker */
+        const btn = row.querySelector('button');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          buscadorAdd(item, btn);
+        });
+        row.addEventListener('mouseover', () => row.style.background = 'rgba(139,122,82,.07)');
+        row.addEventListener('mouseout',  () => row.style.background = '');
+        results.appendChild(row);
+      });
     }
 
     input.addEventListener('input', () => {
       const q = input.value.trim();
       clearBtn.style.display = q ? 'block' : 'none';
-      if (!q || typeof MENU_DATA === 'undefined') { results.style.display='none'; return; }
-      const matches = MENU_DATA.filter(i =>
-        [i.name,i.cat].some(s => normalize(s).includes(normalize(q)))
-      ).slice(0,5);
-      if (!matches.length) { results.style.display='none'; return; }
-      results.style.display = 'block';
-      results.innerHTML = matches.map(item => `
-        <div onclick="window.location.href='${item.page}'" style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid rgba(139,122,82,.1);cursor:pointer;transition:background .15s;gap:12px" onmouseover="this.style.background='rgba(139,122,82,.07)'" onmouseout="this.style.background=''">
-          <div style="display:flex;flex-direction:column;flex:1;min-width:0">
-            <span style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.9rem;color:var(--gold-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(item.name, q)}</span>
-            <span style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px">${item.cat}</span>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8b7a52" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        </div>`).join('');
+      renderResults(q);
     });
 
     clearBtn.addEventListener('click', () => {
-      input.value = ''; results.style.display='none'; clearBtn.style.display='none'; input.focus();
+      input.value = ''; results.style.display='none';
+      clearBtn.style.display='none'; input.focus();
     });
+
     document.addEventListener('click', e => {
-      if (!document.getElementById('index-buscador')?.contains(e.target)) results.style.display='none';
+      if (!document.getElementById('index-buscador')?.contains(e.target))
+        results.style.display = 'none';
     });
   });
   </script>
