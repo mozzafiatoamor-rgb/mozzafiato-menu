@@ -254,6 +254,17 @@ function injectAddButtons() {
     el.appendChild(btn);
   });
 
+  /* ── Desayuno americano picker ── */
+  document.querySelectorAll('[data-americano]').forEach(el => {
+    if (el.querySelector('.add-btn')) return;
+    const btn = makeBtn('Personalizar Desayuno americano');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showAmericanoPicker();
+    });
+    el.appendChild(btn);
+  });
+
   /* ── Agua fresca picker (data-agua-sabor) ── */
   document.querySelectorAll('[data-agua-sabor]').forEach(el => {
     if (el.querySelector('.add-btn')) return;
@@ -483,6 +494,82 @@ function showFeedback(msg) {
   fb._timer = setTimeout(() => fb.classList.remove('visible'), 2500);
 }
 
+
+/* ── Desayuno americano picker ── */
+function showAmericanoPicker() {
+  const existing = document.getElementById('americano-modal');
+  if (existing) existing.remove();
+
+  const state = { ingrediente: null, bebida: null };
+
+  const modal = document.createElement('div');
+  modal.id = 'americano-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);animation:lbFadeIn .2s ease';
+
+  function render() {
+    const ingredientes = ['Jamón','Tocino','Champiñones','Pimientos','Chorizo','Espinaca'];
+    const bebidas      = ['Jugo de naranja','Fruta con granola y yogurt griego'];
+    const canConfirm   = state.ingrediente && state.bebida;
+
+    modal.innerHTML = `
+      <div class="tisana-picker-box" style="max-width:340px;width:92%">
+        <p class="tisana-picker-title">Desayuno americano</p>
+        <p class="tisana-picker-sub">Personaliza tu pedido</p>
+
+        <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.82rem;color:var(--gold-dark);margin:0 0 8px">Ingrediente del huevo</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
+          ${ingredientes.map(i => `
+            <button onclick="americanoSelect('ingrediente','${i}')"
+              style="padding:8px 6px;border:1px solid rgba(139,122,82,${state.ingrediente===i?'.8':'.25'});
+              background:${state.ingrediente===i?'var(--gold-dark)':'transparent'};
+              color:${state.ingrediente===i?'var(--footer-text)':'var(--gold-dark)'};
+              font-family:'Baskerville','Baskerville Old Face',Georgia,serif;
+              font-style:italic;font-size:.85rem;cursor:pointer;transition:all .2s">
+              ${i}
+            </button>`).join('')}
+        </div>
+
+        <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.82rem;color:var(--gold-dark);margin:0 0 8px">Acompañamiento</p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+          ${bebidas.map(b => `
+            <button onclick="americanoSelect('bebida','${b.replace(/'/g,"\\'")}')"
+              style="padding:9px 12px;border:1px solid rgba(139,122,82,${state.bebida===b?'.8':'.25'});
+              background:${state.bebida===b?'var(--gold-dark)':'transparent'};
+              color:${state.bebida===b?'var(--footer-text)':'var(--gold-dark)'};
+              font-family:'Baskerville','Baskerville Old Face',Georgia,serif;
+              font-style:italic;font-size:.85rem;cursor:pointer;text-align:left;transition:all .2s">
+              ${b}
+            </button>`).join('')}
+        </div>
+
+        <div class="pasta-step-nav">
+          <button onclick="document.getElementById('americano-modal').remove()">Cancelar</button>
+          <button class="primary" onclick="americanoConfirm()" ${canConfirm?'':'disabled'}>Agregar al pedido</button>
+        </div>
+      </div>`;
+
+    modal._state = state;
+  }
+
+  window.americanoSelect = (campo, valor) => {
+    const s = document.getElementById('americano-modal')?._state;
+    if (!s) return;
+    s[campo] = valor;
+    render();
+  };
+
+  window.americanoConfirm = () => {
+    const s = document.getElementById('americano-modal')?._state;
+    if (!s || !s.ingrediente || !s.bebida) return;
+    const fullName = `Paquete · Desayuno americano con ${s.ingrediente} y ${s.bebida}`;
+    addItem(fullName);
+    document.getElementById('americano-modal').remove();
+  };
+
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+  render();
+}
 
 /* ── Latte/Cappuccino two-step picker ── */
 function showLattePicker(sabor) {
