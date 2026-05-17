@@ -221,9 +221,10 @@ function openCarrito() {
 function outsideCarritoClick(e) {
   const panel = document.getElementById('carrito-panel');
   const fab   = document.getElementById('carrito-fab');
-  if (panel && !panel.contains(e.target) && !fab?.contains(e.target)) {
-    closeCarrito();
-  }
+  // Ignore clicks inside the panel itself (remove, qty buttons, etc.)
+  if (panel?.contains(e.target)) return;
+  if (fab?.contains(e.target)) return;
+  closeCarrito();
 }
 
 function closeCarrito() {
@@ -884,6 +885,11 @@ function buildCartDOM() {
   }
 
   document.body.appendChild(panel);
+
+  /* ── Close carrito when sidebar opens ── */
+  document.querySelector('.hamburger')?.addEventListener('click', () => {
+    closeCarrito();
+  });
 
   /* ── Floating search pill ── */
   buildBuscadorPill();
