@@ -10,71 +10,6 @@
   <title>Mozzafiato — El Placer del Buen Café</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .buscador-wrap { position:relative;width:100%; }
-    .buscador-input-row {
-      display:flex;align-items:center;gap:10px;
-      background:rgba(255,255,255,.6);
-      border:1px solid rgba(139,122,82,.3);
-      border-radius:32px;padding:10px 16px;
-      backdrop-filter:blur(6px);
-      transition:border-color .2s,box-shadow .2s;
-    }
-    .buscador-input-row:focus-within {
-      border-color:var(--gold);
-      box-shadow:0 2px 16px rgba(139,122,82,.15);
-    }
-    .buscador-icon { width:18px;height:18px;stroke:var(--gold);flex-shrink:0; }
-    #buscador-input {
-      flex:1;border:none;background:transparent;
-      font-family:'Baskerville','Baskerville Old Face',Georgia,serif;
-      font-style:italic;font-size:.92rem;color:var(--text);outline:none;
-    }
-    #buscador-input::placeholder { color:var(--gold);opacity:.7; }
-    #buscador-clear {
-      background:none;border:none;color:var(--gold);cursor:pointer;
-      font-size:.85rem;display:flex;align-items:center;padding:0 2px;
-      opacity:.7;transition:opacity .2s;
-    }
-    #buscador-clear:hover { opacity:1; }
-    #buscador-results {
-      display:none;position:absolute;
-      top:calc(100% + 6px);left:0;right:0;
-      background:var(--bg);
-      border:1px solid rgba(139,122,82,.2);
-      border-radius:12px;overflow:hidden;
-      box-shadow:0 8px 32px rgba(0,0,0,.12);z-index:50;
-    }
-    .buscador-row {
-      display:flex;align-items:center;justify-content:space-between;
-      padding:11px 16px;cursor:pointer;gap:12px;
-      border-bottom:1px solid rgba(139,122,82,.1);
-      transition:background .15s;
-    }
-    .buscador-row:last-child { border-bottom:none; }
-    .buscador-row:hover { background:rgba(139,122,82,.07); }
-    .buscador-row-info { display:flex;flex-direction:column;align-items:flex-start;flex:1;min-width:0; }
-    .buscador-row-name {
-      font-family:'Playfair Display',Georgia,serif;font-style:italic;
-      font-size:.9rem;color:var(--gold-dark);
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;
-    }
-    .buscador-row-name mark {
-      background:rgba(139,122,82,.2);color:var(--gold-dark);
-      border-radius:2px;padding:0 1px;
-    }
-    .buscador-row-cat {
-      font-family:'Baskerville','Baskerville Old Face',Georgia,serif;
-      font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px;
-    }
-    .buscador-add-btn {
-      width:30px;height:30px;border-radius:50%;
-      border:1.5px solid var(--gold);background:transparent;
-      color:var(--gold-dark);font-size:1.1rem;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      transition:background .2s,color .2s,transform .15s;
-    }
-    .buscador-add-btn:hover { background:var(--gold-dark);color:#fff; }
-    .buscador-add-btn.added { background:var(--gold);color:#fff;transform:scale(1.2); }
   </style>
   <style>
     .cover {
@@ -188,7 +123,7 @@
       color: var(--gold-dark);
       font-family: 'Playfair Display', Georgia, serif;
       font-style: italic;
-      font-size: clamp(.8rem, 1.8vw, 1rem);
+      font-size: 1rem;
       letter-spacing: .01em;
       position: relative;
       overflow: hidden;
@@ -251,8 +186,6 @@
     <hr class="cover-line">
     <p class="cover-tagline">Elige una sección de nuestro menú</p>
 
-    <!-- BUSCADOR -->
-    <div id="buscador-container" style="width:100%;max-width:520px;margin-bottom:24px;position:relative;z-index:10;"></div>
 
     <div class="menu-grid">
       <a class="menu-card" href="page1.html"><span>Desayunos</span><span class="arrow">→</span></a>
@@ -278,7 +211,5 @@
   </a>
   <script src="menu.js"></script>
   <script src="carrito.js"></script>
-  <script src="menu-data.js"></script>
-  <script src="buscador.js"></script>
 </body>
 </html>

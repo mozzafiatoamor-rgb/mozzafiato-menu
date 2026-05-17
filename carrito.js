@@ -735,6 +735,222 @@ function buildCartDOM() {
   document.body.appendChild(modeBtn);
 
   document.body.appendChild(panel);
+
+  /* ── Floating search pill ── */
+  buildBuscadorPill();
+}
+
+/* ══════════════════════════════
+   BUSCADOR FLOTANTE DRAGGABLE
+══════════════════════════════ */
+const PILL_POS_KEY = 'mozzafiato_pill_pos';
+
+function buildBuscadorPill() {
+  /* Load menu-data.js dynamically if not already loaded */
+  if (typeof MENU_DATA === 'undefined') {
+    const s = document.createElement('script');
+    s.src = 'menu-data.js';
+    document.head.appendChild(s);
+  }
+
+  /* Default position — bottom center */
+  const savedPos = JSON.parse(localStorage.getItem(PILL_POS_KEY) || 'null');
+  const defaultX = Math.round(window.innerWidth / 2 - 130);
+  const defaultY = window.innerHeight - 80;
+  const startX = savedPos ? savedPos.x : defaultX;
+  const startY = savedPos ? savedPos.y : defaultY;
+
+  /* Pill button */
+  const pill = document.createElement('div');
+  pill.id = 'buscador-pill';
+  pill.setAttribute('aria-label', 'Abrir buscador');
+  pill.style.left = startX + 'px';
+  pill.style.top  = startY + 'px';
+  pill.innerHTML = `
+    <i id="buscador-pill-icon" class="ti ti-search" aria-hidden="true"></i>
+    <span id="buscador-pill-text">¿Ya sabes qué ordenar? Busca aquí...</span>
+  `;
+  document.body.appendChild(pill);
+
+  /* Search panel */
+  const panel = document.createElement('div');
+  panel.id = 'buscador-panel';
+  panel.innerHTML = `
+    <div id="buscador-input-row">
+      <i class="ti ti-search" style="color:var(--gold);font-size:16px;flex-shrink:0" aria-hidden="true"></i>
+      <input id="buscador-field" type="search" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Platillo, bebida, categoría...">
+      <button id="buscador-close-btn" aria-label="Cerrar">✕</button>
+    </div>
+    <div id="buscador-results-list"></div>
+    <div class="buscador-hint" id="buscador-hint">Ej: frappe, ensalada, huevos...</div>
+  `;
+  document.body.appendChild(panel);
+
+  let panelOpen = false;
+  let isDragging = false;
+  let dragMoved = false;
+  let dragStartX, dragStartY, pillStartX, pillStartY;
+
+  function positionPanel() {
+    const pr = pill.getBoundingClientRect();
+    const pw = panel.offsetWidth || 320;
+    const ph = panel.offsetHeight || 280;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let x = pr.left + pr.width / 2 - pw / 2;
+    let y = pr.top - ph - 8;
+    if (y < 8) y = pr.bottom + 8;
+    x = Math.max(8, Math.min(x, vw - pw - 8));
+    y = Math.max(8, Math.min(y, vh - ph - 8));
+    panel.style.left = x + 'px';
+    panel.style.top  = y + 'px';
+  }
+
+  function openPanel() {
+    panelOpen = true;
+    pill.classList.add('open');
+    panel.classList.add('open');
+    positionPanel();
+    setTimeout(() => document.getElementById('buscador-field')?.focus(), 80);
+  }
+
+  function closePanel() {
+    panelOpen = false;
+    pill.classList.remove('open');
+    panel.classList.remove('open');
+    const field = document.getElementById('buscador-field');
+    if (field) { field.value = ''; renderBuscadorResults(''); }
+  }
+
+  /* Toggle on tap (not drag) */
+  pill.addEventListener('click', () => {
+    if (dragMoved) return;
+    panelOpen ? closePanel() : openPanel();
+  });
+
+  document.getElementById('buscador-close-btn')?.addEventListener('click', closePanel);
+
+  /* Close on outside click */
+  document.addEventListener('click', (e) => {
+    if (panelOpen && !pill.contains(e.target) && !panel.contains(e.target)) closePanel();
+  });
+
+  /* Search input */
+  document.getElementById('buscador-field')?.addEventListener('input', (e) => {
+    renderBuscadorResults(e.target.value);
+  });
+
+  /* ── Drag — mouse ── */
+  pill.addEventListener('mousedown', (e) => {
+    isDragging = true; dragMoved = false;
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    pillStartX = pill.offsetLeft; pillStartY = pill.offsetTop;
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX;
+    const dy = e.clientY - dragStartY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) dragMoved = true;
+    if (!dragMoved) return;
+    const x = Math.max(0, Math.min(pillStartX + dx, window.innerWidth  - pill.offsetWidth));
+    const y = Math.max(0, Math.min(pillStartY + dy, window.innerHeight - pill.offsetHeight));
+    pill.style.left = x + 'px'; pill.style.top = y + 'px';
+    if (panelOpen) positionPanel();
+  });
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
+    }
+  });
+
+  /* ── Drag — touch ── */
+  pill.addEventListener('touchstart', (e) => {
+    isDragging = true; dragMoved = false;
+    const t = e.touches[0];
+    dragStartX = t.clientX; dragStartY = t.clientY;
+    pillStartX = pill.offsetLeft; pillStartY = pill.offsetTop;
+  }, { passive: true });
+  pill.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const t = e.touches[0];
+    const dx = t.clientX - dragStartX;
+    const dy = t.clientY - dragStartY;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) dragMoved = true;
+    if (!dragMoved) return;
+    e.preventDefault();
+    const x = Math.max(0, Math.min(pillStartX + dx, window.innerWidth  - pill.offsetWidth));
+    const y = Math.max(0, Math.min(pillStartY + dy, window.innerHeight - pill.offsetHeight));
+    pill.style.left = x + 'px'; pill.style.top = y + 'px';
+    if (panelOpen) positionPanel();
+  }, { passive: false });
+  pill.addEventListener('touchend', () => {
+    isDragging = false;
+    if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
+  });
+}
+
+function renderBuscadorResults(query) {
+  const list = document.getElementById('buscador-results-list');
+  const hint = document.getElementById('buscador-hint');
+  if (!list) return;
+  if (!query || !query.trim()) {
+    list.innerHTML = '';
+    if (hint) hint.style.display = 'block';
+    return;
+  }
+  if (hint) hint.style.display = 'none';
+  if (typeof MENU_DATA === 'undefined') {
+    list.innerHTML = '<div class="buscador-hint">Cargando...</div>';
+    return;
+  }
+  const q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'');
+  const results = MENU_DATA.filter(item =>
+    [item.name, item.cat].some(s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').includes(q))
+  ).slice(0, 5);
+  if (!results.length) {
+    list.innerHTML = '<div class="buscador-hint">Sin resultados</div>';
+    return;
+  }
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  list.innerHTML = results.map(item => {
+    const isPicker = item.type === 'picker';
+    const highlighted = item.name.replace(re, '<mark>$1</mark>');
+    return `
+      <div class="buscador-row" onclick="buscadorGoTo('${item.page}')">
+        <div class="buscador-row-info">
+          <span class="buscador-row-name">${highlighted}</span>
+          <span class="buscador-row-cat">${item.cat}</span>
+        </div>
+        <button class="buscador-add-btn" aria-label="Agregar" onclick="event.stopPropagation();buscadorAdd(${JSON.stringify(item).replace(/"/g,'&quot;')},this)">${isPicker ? '⚙' : '+'}</button>
+      </div>`;
+  }).join('');
+}
+
+function buscadorGoTo(page) { window.location.href = page; }
+
+function buscadorAdd(item, btn) {
+  if (item.type === 'picker') {
+    if (item.picker === 'pasta'  && typeof showPastaModal    === 'function') { showPastaModal(); return; }
+    if (item.picker === 'latte'  && typeof showLattePicker   === 'function') { showLattePicker(item.pickerName); return; }
+    if (item.picker === 'waffle' && typeof showWafflePicker  === 'function') { showWafflePicker(item.pickerName); return; }
+    if (item.picker === 'tisana' && typeof showGenericPicker === 'function') {
+      showGenericPicker({ title: item.pickerName, sub: '¿En qué presentación?',
+        options: [{ label:'Caliente',note:'$99'},{label:'Fría',note:'$105'},{label:'Smoothie',note:'$115'}],
+        onSelect: (t) => addItem('Tisana ' + t + ' · ' + item.pickerName) }); return;
+    }
+    if (item.picker === 'agua' && typeof showGenericPicker === 'function') {
+      showGenericPicker({ title: item.pickerName, sub: '¿Con qué agua?',
+        options: [{ label:'Agua natural',note:'$79'},{label:'Agua mineral',note:'$89'}],
+        onSelect: (t) => addItem('Agua Fresca ' + t + ' · ' + item.pickerName) }); return;
+    }
+    window.location.href = item.page; return;
+  }
+  addItem(item.cartName);
+  btn.textContent = '✓'; btn.classList.add('added');
+  setTimeout(() => { btn.textContent = '+'; btn.classList.remove('added'); }, 1000);
+  if (typeof showAddedFeedback === 'function') showAddedFeedback(item.cartName);
 }
 
 /* ── Init ── */
