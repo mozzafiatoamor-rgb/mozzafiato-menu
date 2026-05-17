@@ -1077,7 +1077,7 @@ body.carrito-active .add-btn {
 /* ── Mode FAB (floating toggle) ── */
 #mode-fab {
   position: fixed;
-  top: 14px;
+  top: 70px;
   left: 14px;
   z-index: 300;
   display: flex;
