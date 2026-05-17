@@ -1078,7 +1078,7 @@ body.carrito-active .add-btn {
 #mode-fab {
   position: fixed;
   top: 14px;
-  right: 72px;
+  left: 14px;
   z-index: 300;
   display: flex;
   align-items: center;
