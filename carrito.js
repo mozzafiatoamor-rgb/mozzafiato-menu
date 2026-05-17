@@ -615,7 +615,7 @@ function showTT1() {
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">
       <div>
         <p style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.85rem;font-weight:600;color:#ede8dc;margin:0 0 4px">Anota tu pedido</p>
-        <p style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.78rem;color:#c4ad82;margin:0;line-height:1.5">Activa el switch para agregar platillos a tu lista mientras esperas al mesero.</p>
+        <p style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.78rem;color:#c4ad82;margin:0;line-height:1.5">Activa este botón para agregar platillos a tu lista mientras esperas al mesero.</p>
       </div>
       <button onclick="closeTTAll()" style="background:none;border:none;color:#c4ad82;cursor:pointer;font-size:14px;padding:0;flex-shrink:0;line-height:1">✕</button>
     </div>
@@ -775,6 +775,13 @@ function buildCartDOM() {
   `;
   playBtn.addEventListener('click', startTutorial);
   document.body.appendChild(playBtn);
+
+  /* Hide both on index page */
+  const onIndex = location.pathname.endsWith('index.html') || location.pathname.endsWith('/');
+  if (onIndex) {
+    modeBtn.style.display = 'none';
+    playBtn.style.display = 'none';
+  }
 
   document.body.appendChild(panel);
 
