@@ -743,24 +743,22 @@ function buildCartDOM() {
 /* ══════════════════════════════
    BUSCADOR FLOTANTE DRAGGABLE
 ══════════════════════════════ */
-const PILL_POS_KEY = 'mozzafiato_pill_pos';
+const PILL_POS_KEY    = 'mozzafiato_pill_pos';
+const PILL_SEEN_KEY   = 'mozzafiato_pill_seen';
 
 function buildBuscadorPill() {
-  /* Load menu-data.js dynamically if not already loaded */
   if (typeof MENU_DATA === 'undefined') {
     const s = document.createElement('script');
     s.src = 'menu-data.js';
     document.head.appendChild(s);
   }
 
-  /* Default position — bottom center */
   const savedPos = JSON.parse(localStorage.getItem(PILL_POS_KEY) || 'null');
   const defaultX = Math.round(window.innerWidth / 2 - 130);
   const defaultY = window.innerHeight - 80;
   const startX = savedPos ? savedPos.x : defaultX;
   const startY = savedPos ? savedPos.y : defaultY;
 
-  /* Pill button */
   const pill = document.createElement('div');
   pill.id = 'buscador-pill';
   pill.setAttribute('aria-label', 'Abrir buscador');
@@ -772,7 +770,6 @@ function buildBuscadorPill() {
   `;
   document.body.appendChild(pill);
 
-  /* Search panel */
   const panel = document.createElement('div');
   panel.id = 'buscador-panel';
   panel.innerHTML = `
@@ -792,16 +789,27 @@ function buildBuscadorPill() {
   let dragStartX, dragStartY, pillStartX, pillStartY;
 
   function positionPanel() {
-    const pr = pill.getBoundingClientRect();
-    const pw = panel.offsetWidth || 320;
-    const ph = panel.offsetHeight || 280;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    /* Make panel visible off-screen to measure it */
+    panel.style.visibility = 'hidden';
+    panel.style.display = 'block';
+    const pr  = pill.getBoundingClientRect();
+    const pw  = panel.offsetWidth  || 320;
+    const ph  = panel.offsetHeight || 160;
+    const vw  = window.innerWidth;
+    const vh  = window.innerHeight;
+    panel.style.visibility = '';
+    panel.style.display = '';
+
+    /* Prefer above pill, fallback below */
+    const spaceAbove = pr.top - 12;
+    const spaceBelow = vh - pr.bottom - 12;
+    let y = spaceAbove >= ph ? pr.top - ph - 8 : pr.bottom + 8;
+
+    /* Center horizontally on pill, clamp to viewport */
     let x = pr.left + pr.width / 2 - pw / 2;
-    let y = pr.top - ph - 8;
-    if (y < 8) y = pr.bottom + 8;
     x = Math.max(8, Math.min(x, vw - pw - 8));
     y = Math.max(8, Math.min(y, vh - ph - 8));
+
     panel.style.left = x + 'px';
     panel.style.top  = y + 'px';
   }
@@ -889,6 +897,30 @@ function buildBuscadorPill() {
     isDragging = false;
     if (dragMoved) localStorage.setItem(PILL_POS_KEY, JSON.stringify({ x: pill.offsetLeft, y: pill.offsetTop }));
   });
+
+  /* ── First-visit attention animation ── */
+  if (localStorage.getItem(PILL_SEEN_KEY) !== 'seen') {
+    localStorage.setItem(PILL_SEEN_KEY, 'seen');
+    setTimeout(() => {
+      pill.style.transition = 'transform .15s ease, box-shadow .15s ease';
+      let count = 0;
+      const bounce = setInterval(() => {
+        count++;
+        pill.style.transform = count % 2 === 1
+          ? 'scale(1.08) translateY(-4px)'
+          : 'scale(1) translateY(0)';
+        pill.style.boxShadow = count % 2 === 1
+          ? '0 8px 28px rgba(94,79,48,.45)'
+          : '0 3px 16px rgba(0,0,0,.15)';
+        if (count >= 6) {
+          clearInterval(bounce);
+          pill.style.transform = '';
+          pill.style.boxShadow = '';
+          setTimeout(() => { pill.style.transition = ''; }, 200);
+        }
+      }, 220);
+    }, 1200);
+  }
 }
 
 function renderBuscadorResults(query) {
