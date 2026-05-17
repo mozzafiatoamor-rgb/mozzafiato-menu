@@ -1278,3 +1278,16 @@ body.carrito-active .add-btn {
   color: var(--gold); opacity: .7;
   text-align: center; padding: 6px 0;
 }
+
+/* ── Carrito FAB bounce on add ── */
+@keyframes fabBounce {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.28) rotate(-8deg); }
+  50%  { transform: scale(1.18) rotate(6deg); }
+  70%  { transform: scale(1.08) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+#carrito-fab.fab-bounce {
+  animation: fabBounce .45s cubic-bezier(.4,0,.2,1);
+}

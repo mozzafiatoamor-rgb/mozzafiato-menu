@@ -68,6 +68,13 @@ function updateBadge() {
   const n = totalItems();
   badge.textContent = n;
   badge.style.display = n > 0 ? 'flex' : 'none';
+
+  /* Bounce the FAB icon on every update */
+  const fab = document.getElementById('carrito-fab');
+  if (!fab || n === 0) return;
+  fab.classList.remove('fab-bounce');
+  void fab.offsetWidth; /* force reflow to restart animation */
+  fab.classList.add('fab-bounce');
 }
 
 /* ── Feedback al agregar ── */
