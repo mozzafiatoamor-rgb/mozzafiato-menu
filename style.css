@@ -695,12 +695,12 @@ footer .footer-brand {
   width: 300px;
   max-width: calc(100vw - 20px);
   max-height: calc(100dvh - 80px);
-  background: rgba(237,232,220,.18);
+  background: rgba(20,12,4,.82);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(196,173,130,.25);
+  border: 1px solid rgba(196,173,130,.2);
   border-radius: 16px;
-  box-shadow: 0 8px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+  box-shadow: 0 8px 40px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
   z-index: 360;
   display: none;
   flex-direction: column;
@@ -752,7 +752,7 @@ footer .footer-brand {
   text-align: center;
   font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
   font-style: italic;
-  color: rgba(237,232,220,.7);
+  color: rgba(237,232,220,.75);
   font-size: .88rem;
   line-height: 1.7;
 }
@@ -777,7 +777,7 @@ footer .footer-brand {
   font-family: 'Baskerville', 'Baskerville Old Face', Georgia, serif;
   font-style: italic;
   font-size: .85rem;
-  color: #ede8dc;
+  color: #f0ece3;
   flex: 1;
   line-height: 1.4;
 }
@@ -1106,7 +1106,7 @@ body.carrito-active .add-btn {
 /* ── Mode FAB (floating toggle) ── */
 #mode-fab {
   position: fixed;
-  top: 72px;
+  bottom: 90px;
   right: 16px;
   z-index: 400;
   display: flex;
@@ -1148,7 +1148,7 @@ body.carrito-active .add-btn {
 /* ── Tutorial play button ── */
 #tutorial-play-btn {
   position: fixed;
-  top: 122px;
+  bottom: 140px;
   right: 16px;
   z-index: 400;
   display: flex;
