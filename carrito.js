@@ -1115,6 +1115,14 @@ function buildBuscadorPill() {
     if (!isCollapsed) return;
     isCollapsed = false;
     pill.classList.remove('collapsed');
+    /* Convert to left/top positioning so we can shift left */
+    const rect = pill.getBoundingClientRect();
+    const pillExpandedW = 270;
+    const newLeft = Math.max(8, rect.right - pillExpandedW);
+    pill.style.right  = '';
+    pill.style.bottom = '';
+    pill.style.left   = newLeft + 'px';
+    pill.style.top    = rect.top + 'px';
   }
 
   window.addEventListener('scroll', () => {
