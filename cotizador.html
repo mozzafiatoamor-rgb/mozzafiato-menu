@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mozzafiato · Cotizador (Admin)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#ede8dc; --bg2:#e5dfd0; --gold:#8b7a52; --gold-dark:#5e4f30;
+      --gold-light:#c4ad82; --text:#3a3020; --text-soft:#6b5d3f;
+      --footer-bg:#3a3020; --footer-text:#d4c49a; --white:#faf8f3;
+      --line:rgba(139,122,82,.25); --danger:#a5482f;
+      --serif:'Libre Baskerville','Baskerville',Georgia,serif;
+      --display:'Playfair Display',Georgia,serif;
+      --script:'Great Vibes',cursive;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0}
+    body{
+      font-family:var(--serif); color:var(--text);
+      background:var(--bg);
+      background-image:radial-gradient(ellipse at 20% 0%, rgba(139,122,82,.06) 0%, transparent 55%),
+                       radial-gradient(ellipse at 80% 100%, rgba(94,79,48,.07) 0%, transparent 55%);
+      min-height:100vh;
+    }
+    h1,h2,h3{font-family:var(--display); color:var(--gold-dark); margin:0}
+    button{font-family:var(--serif); cursor:pointer}
+    input,select,textarea{font-family:var(--serif); color:var(--text)}
+
+    /* ── PIN GATE ── */
+    #gate{
+      position:fixed; inset:0; z-index:50;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      background:var(--bg); padding:24px; text-align:center;
+    }
+    #gate img{width:120px; margin-bottom:8px; filter:sepia(60%) brightness(.65) saturate(.7)}
+    #gate .brand{font-family:var(--script); font-size:2.4rem; color:var(--gold-dark); line-height:1}
+    #gate .sub{color:var(--gold); letter-spacing:.25em; text-transform:uppercase; font-size:.7rem; margin:6px 0 26px}
+    #gate .box{background:var(--white); border:1px solid var(--line); border-radius:16px; padding:26px 28px; max-width:340px; width:100%; box-shadow:0 14px 40px rgba(58,48,32,.14)}
+    #gate label{display:block; font-size:.9rem; color:var(--text-soft); margin-bottom:10px}
+    #gate input{width:100%; padding:13px 14px; text-align:center; font-size:1.3rem; letter-spacing:.3em;
+      border:1px solid var(--line); border-radius:10px; background:var(--bg); outline:none}
+    #gate input:focus{border-color:var(--gold)}
+    #gate button{margin-top:14px; width:100%; padding:13px; border:none; border-radius:10px;
+      background:var(--gold-dark); color:var(--footer-text); font-size:1rem; letter-spacing:.05em}
+    #gate button:hover{background:var(--gold)}
+    #gate .err{color:var(--danger); font-size:.85rem; min-height:1.2em; margin-top:10px}
+
+    /* ── HEADER ── */
+    header{
+      position:sticky; top:0; z-index:20;
+      display:flex; align-items:center; gap:14px;
+      padding:12px 20px; background:var(--footer-bg); color:var(--footer-text);
+      box-shadow:0 2px 14px rgba(0,0,0,.18);
+    }
+    header img{height:40px; filter:brightness(0) invert(1) opacity(.85)}
+    header .titles{flex:1; min-width:0}
+    header .titles .t{font-family:var(--script); font-size:1.7rem; color:#fff; line-height:1}
+    header .titles .s{font-size:.66rem; letter-spacing:.28em; text-transform:uppercase; color:var(--gold-light)}
+    header .logout{background:transparent; border:1px solid rgba(212,196,154,.4); color:var(--footer-text);
+      border-radius:8px; padding:7px 12px; font-size:.8rem}
+    header .logout:hover{background:rgba(212,196,154,.12)}
+
+    /* ── LAYOUT ── */
+    .wrap{max-width:1240px; margin:0 auto; padding:20px; display:grid; grid-template-columns:1fr 1.15fr; gap:20px; align-items:start}
+    @media (max-width:900px){ .wrap{grid-template-columns:1fr} }
+
+    .card{background:var(--white); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 26px rgba(58,48,32,.08)}
+    .card > .card-head{padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:10px; justify-content:space-between}
+    .card > .card-head h2{font-size:1.15rem}
+    .card > .card-body{padding:16px 18px}
+
+    /* ── CATALOG ── */
+    .catalog{position:sticky; top:78px}
+    .search-row{display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap}
+    .search-row input, .search-row select{
+      padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); font-size:.92rem; outline:none}
+    .search-row input{flex:1; min-width:150px}
+    .search-row input:focus, .search-row select:focus{border-color:var(--gold)}
+    .cat-list{max-height:62vh; overflow:auto; padding-right:4px}
+    .cat-group-title{font-family:var(--display); font-size:.78rem; text-transform:uppercase; letter-spacing:.12em;
+      color:var(--gold); margin:14px 0 6px; padding-bottom:4px; border-bottom:1px dashed var(--line)}
+    .cat-group-title:first-child{margin-top:0}
+    .menu-item{display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:9px}
+    .menu-item:hover{background:var(--bg)}
+    .menu-item .mi-name{flex:1; font-size:.9rem; line-height:1.25}
+    .menu-item .mi-price{font-family:var(--display); color:var(--gold-dark); font-size:.92rem; white-space:nowrap}
+    .menu-item .mi-add{width:30px; height:30px; border-radius:50%; border:1.5px solid var(--gold);
+      background:transparent; color:var(--gold-dark); font-size:1.15rem; line-height:1; flex:none; transition:.15s}
+    .menu-item .mi-add:hover{background:var(--gold-dark); color:#fff; transform:scale(1.08)}
+    .empty{color:var(--text-soft); font-style:italic; padding:20px 4px; text-align:center}
+
+    /* ── QUOTE FORM ── */
+    .field{margin-bottom:12px}
+    .field label{display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-soft); margin-bottom:5px}
+    .field input, .field textarea{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); font-size:.95rem; outline:none}
+    .field input:focus, .field textarea:focus{border-color:var(--gold)}
+    .field textarea{min-height:64px; resize:vertical; font-family:var(--serif)}
+    .fld-row{display:flex; gap:12px} .fld-row .field{flex:1}
+    @media (max-width:520px){ .fld-row{flex-direction:column; gap:0} }
+
+    .lines{margin-top:6px}
+    .lines table{width:100%; border-collapse:collapse}
+    .lines th{font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; color:var(--gold); text-align:left; padding:6px 6px; border-bottom:1px solid var(--line)}
+    .lines th.num, .lines td.num{text-align:right}
+    .lines td{padding:6px 6px; border-bottom:1px dashed var(--line); vertical-align:middle}
+    .lines .l-name input{width:100%; border:none; background:transparent; font-size:.9rem; padding:4px 2px; border-bottom:1px solid transparent}
+    .lines .l-name input:focus{border-bottom-color:var(--gold); outline:none; background:var(--bg)}
+    .lines .l-name .fixed{font-size:.9rem; line-height:1.25}
+    .lines input.qty, .lines input.price{width:72px; text-align:right; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--bg); font-size:.88rem}
+    .lines input.qty{width:56px}
+    .lines .l-sub{font-family:var(--display); color:var(--gold-dark); white-space:nowrap; font-size:.92rem}
+    .lines .l-del{border:none; background:transparent; color:var(--danger); font-size:1.1rem; line-height:1; padding:2px 6px; border-radius:6px}
+    .lines .l-del:hover{background:rgba(165,72,47,.1)}
+    .lines .empty-lines td{color:var(--text-soft); font-style:italic; text-align:center; padding:22px}
+
+    .add-service{margin-top:10px; background:transparent; border:1.5px dashed var(--gold); color:var(--gold-dark);
+      border-radius:10px; padding:9px 14px; font-size:.85rem; width:100%}
+    .add-service:hover{background:var(--bg2)}
+
+    .totals{margin-top:16px; padding-top:14px; border-top:2px solid var(--line)}
+    .iva-toggle{display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.9rem; color:var(--text-soft)}
+    .switch{position:relative; width:46px; height:26px; flex:none}
+    .switch input{opacity:0; width:0; height:0}
+    .switch .sl{position:absolute; inset:0; background:var(--gold-light); border-radius:26px; transition:.2s}
+    .switch .sl:before{content:''; position:absolute; height:20px; width:20px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s}
+    .switch input:checked + .sl{background:var(--gold-dark)}
+    .switch input:checked + .sl:before{transform:translateX(20px)}
+    .tot-row{display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; font-size:.98rem}
+    .tot-row .lbl{color:var(--text-soft)}
+    .tot-row.grand{margin-top:6px; padding-top:10px; border-top:1px solid var(--line)}
+    .tot-row.grand .lbl{font-family:var(--display); color:var(--gold-dark); font-size:1.25rem}
+    .tot-row.grand .val{font-family:var(--display); color:var(--gold-dark); font-size:1.5rem; font-weight:700}
+    .tot-row .val{font-family:var(--display)}
+
+    .actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px}
+    .actions button{padding:12px; border-radius:11px; border:none; font-size:.92rem; letter-spacing:.02em; display:flex; align-items:center; justify-content:center; gap:7px}
+    .btn-print{background:var(--gold-dark); color:var(--footer-text); grid-column:1 / -1}
+    .btn-print:hover{background:var(--gold)}
+    .btn-wa{background:#1f7a4d; color:#fff}
+    .btn-wa:hover{background:#166138}
+    .btn-copy{background:var(--gold-light); color:var(--gold-dark)}
+    .btn-copy:hover{background:#b59a6c}
+    .btn-clear{background:transparent; color:var(--danger); border:1px solid rgba(165,72,47,.35)!important; grid-column:1 / -1}
+    .btn-clear:hover{background:rgba(165,72,47,.08)}
+
+    .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+      background:var(--gold-dark); color:#fff; padding:12px 22px; border-radius:30px; font-size:.9rem;
+      opacity:0; pointer-events:none; transition:.25s; z-index:60; box-shadow:0 8px 24px rgba(0,0,0,.2)}
+    .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+    .folio-tag{font-size:.72rem; color:var(--gold); letter-spacing:.08em}
+
+    /* ── PRINT / LETTERHEAD DOCUMENT ── */
+    #print-doc{display:none}
+    @media print{
+      @page{ margin:14mm 14mm 16mm; }
+      #gate, #app, .toast{display:none!important}
+      body{background:#fff!important; background-image:none!important}
+      #print-doc{display:block!important}
+    }
+    /* on-screen preview reuse (hidden normally) */
+    .sheet{max-width:720px; margin:0 auto; color:#2c2417; font-family:var(--serif)}
+    .sheet .lh{display:flex; align-items:center; gap:18px; border-bottom:3px double var(--gold); padding-bottom:16px}
+    .sheet .lh img{width:88px; height:auto}
+    .sheet .lh .biz{flex:1}
+    .sheet .lh .biz .name{font-family:var(--script); font-size:2.5rem; color:var(--gold-dark); line-height:1}
+    .sheet .lh .biz .tag{font-family:var(--display); font-style:italic; color:var(--gold); font-size:.95rem; margin-top:2px}
+    .sheet .lh .biz .contact{font-size:.74rem; color:#6b5d3f; margin-top:6px; line-height:1.5}
+    .sheet .lh .doc{text-align:right}
+    .sheet .lh .doc .word{font-family:var(--display); font-size:1.5rem; color:var(--gold-dark); letter-spacing:.04em}
+    .sheet .lh .doc .folio{font-size:.8rem; color:#6b5d3f; margin-top:2px}
+    .sheet .lh .doc .date{font-size:.78rem; color:#6b5d3f}
+    .sheet .meta{display:flex; justify-content:space-between; gap:20px; margin:18px 0 4px; font-size:.86rem}
+    .sheet .meta .b{font-family:var(--display); color:var(--gold-dark); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; display:block; margin-bottom:2px}
+    .sheet table.items{width:100%; border-collapse:collapse; margin-top:12px; font-size:.86rem}
+    .sheet table.items th{background:var(--gold-dark); color:#f3ecd9; text-align:left; padding:8px 10px; font-family:var(--display); font-weight:600; font-size:.76rem; letter-spacing:.04em}
+    .sheet table.items th.num{text-align:right}
+    .sheet table.items td{padding:7px 10px; border-bottom:1px solid #e4dcc8}
+    .sheet table.items td.num{text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums}
+    .sheet table.items tr:nth-child(even) td{background:#faf6ec}
+    .sheet .sum{margin-top:14px; margin-left:auto; width:280px; font-size:.9rem}
+    .sheet .sum .r{display:flex; justify-content:space-between; padding:4px 2px}
+    .sheet .sum .r.grand{border-top:2px solid var(--gold-dark); margin-top:6px; padding-top:8px; font-family:var(--display); font-size:1.2rem; color:var(--gold-dark); font-weight:700}
+    .sheet .notes{margin-top:20px; font-size:.82rem; color:#4a3f2b}
+    .sheet .notes .b{font-family:var(--display); color:var(--gold-dark); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; display:block; margin-bottom:4px}
+    .sheet .foot{margin-top:34px; border-top:1px solid #e4dcc8; padding-top:12px; text-align:center; font-size:.72rem; color:#8a7b57; font-style:italic}
+    .sheet .foot .thanks{font-family:var(--script); font-size:1.5rem; color:var(--gold-dark); font-style:normal; display:block; margin-bottom:4px}
+  </style>
+</head>
+<body>
+
+  <!-- ══════════ PIN GATE ══════════ -->
+  <div id="gate">
+    <img id="gate-logo" src="images/logo.png" alt="Mozzafiato" onerror="this.style.display='none'">
+    <div class="brand">Mozzafiato</div>
+    <div class="sub">Cotizador · Administrador</div>
+    <div class="box">
+      <label for="pin">Ingresa tu PIN de acceso</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="20" placeholder="••••">
+      <button id="pin-btn">Entrar</button>
+      <div class="err" id="pin-err"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ APP ══════════ -->
+  <div id="app" hidden>
+    <header>
+      <img src="images/logo.png" alt="" onerror="this.style.display='none'">
+      <div class="titles">
+        <div class="t">Mozzafiato</div>
+        <div class="s">Cotizador de eventos y servicios</div>
+      </div>
+      <button class="logout" id="logout">Salir</button>
+    </header>
+
+    <div class="wrap">
+      <!-- LEFT: catalog -->
+      <div class="card catalog">
+        <div class="card-head"><h2>Menú</h2><span class="folio-tag" id="count-tag"></span></div>
+        <div class="card-body">
+          <div class="search-row">
+            <input id="search" type="search" placeholder="Buscar platillo…">
+            <select id="cat-filter"><option value="">Todas las categorías</option></select>
+          </div>
+          <div class="cat-list" id="cat-list"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: quote -->
+      <div class="card">
+        <div class="card-head"><h2>Cotización</h2><span class="folio-tag" id="folio-tag"></span></div>
+        <div class="card-body">
+          <div class="fld-row">
+            <div class="field">
+              <label>Solicita la factura / cliente</label>
+              <input id="c-cliente" placeholder="Nombre de quien solicita">
+            </div>
+            <div class="field">
+              <label>Empresa (opcional)</label>
+              <input id="c-empresa" placeholder="Razón social o empresa">
+            </div>
+          </div>
+          <div class="fld-row">
+            <div class="field">
+              <label>Fecha del evento / servicio</label>
+              <input id="c-fecha" type="date">
+            </div>
+            <div class="field">
+              <label>Contacto (tel / correo)</label>
+              <input id="c-contacto" placeholder="Opcional">
+            </div>
+          </div>
+
+          <div class="lines">
+            <table>
+              <thead><tr>
+                <th>Concepto</th><th class="num">Cant.</th><th class="num">P. unit.</th><th class="num">Importe</th><th></th>
+              </tr></thead>
+              <tbody id="lines-body"></tbody>
+            </table>
+          </div>
+          <button class="add-service" id="add-service">+ Agregar servicio / concepto libre</button>
+
+          <div class="totals">
+            <div class="iva-toggle">
+              <label class="switch"><input type="checkbox" id="iva-toggle"><span class="sl"></span></label>
+              <span>Aplicar IVA (16%)</span>
+            </div>
+            <div class="tot-row"><span class="lbl">Subtotal</span><span class="val" id="t-sub">$0.00</span></div>
+            <div class="tot-row" id="row-iva" hidden><span class="lbl">IVA 16%</span><span class="val" id="t-iva">$0.00</span></div>
+            <div class="tot-row grand"><span class="lbl">Total</span><span class="val" id="t-total">$0.00</span></div>
+          </div>
+
+          <div class="field" style="margin-top:16px">
+            <label>Comentarios / condiciones</label>
+            <textarea id="c-notas" placeholder="Ej. Incluye montaje y servicio. Anticipo 50%. Precios sujetos a cambio sin previo aviso. Sabores de bebidas a elegir…"></textarea>
+          </div>
+
+          <div class="actions">
+            <button class="btn-print" id="btn-print">🖨️ Imprimir / Guardar PDF</button>
+            <button class="btn-wa" id="btn-wa">Enviar por WhatsApp</button>
+            <button class="btn-copy" id="btn-copy">Copiar texto</button>
+            <button class="btn-clear" id="btn-clear">Nueva cotización (limpiar)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PRINTABLE LETTERHEAD ══════════ -->
+  <div id="print-doc"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="cotizador-data.js"></script>
+  <script>
+  /* ═══════════════════════════════════════════════
+     CONFIGURACIÓN — cambia tu PIN aquí
+     ═══════════════════════════════════════════════ */
+  const ADMIN_PIN = "1234";           // ← CAMBIA ESTE PIN
+  const WHATSAPP_DEFAULT = "";         // ← opcional: número con lada, ej "5219981234567" (deja "" para elegir al enviar)
+
+  const BIZ = {
+    name: "Mozzafiato",
+    tagline: "El Placer del Buen Café",
+    address: "Andador 65 × calle 66 y 68, Felipe Carrillo Puerto, Quintana Roo · C.P. 77200",
+    phone: "998 408 8897"
+  };
+
+  const IVA_RATE = 0.16;
+  const SKEY = "mozza_cotizador_draft";
+  const FKEY = "mozza_cotizador_folio";
+  const AKEY = "mozza_cotizador_auth";
+
+  const money = n => new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(n||0);
+  const $ = s => document.querySelector(s);
+
+  /* ── logo: usa data-uri embebido si existe, si no la ruta ── */
+  const LOGO = (typeof MOZZA_LOGO !== 'undefined' && MOZZA_LOGO) ? MOZZA_LOGO : 'images/logo.png';
+  document.getElementById('gate-logo').src = LOGO;
+  document.querySelector('header img').src = LOGO;
+
+  /* ═══════════ ESTADO ═══════════ */
+  let state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, folio:'', lines:[] };
+
+  function loadDraft(){
+    try{ const d = JSON.parse(localStorage.getItem(SKEY)); if(d) state = Object.assign(state,d); }catch(e){}
+    if(!state.folio) state.folio = nextFolio(false);
+  }
+  function saveDraft(){ try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){} }
+
+  function nextFolio(commit){
+    let n = 0;
+    try{ n = parseInt(localStorage.getItem(FKEY)||'0',10)||0; }catch(e){}
+    n = n + 1;
+    if(commit){ try{ localStorage.setItem(FKEY, String(n)); }catch(e){} }
+    const y = new Date().getFullYear();
+    return 'COT-' + y + '-' + String(n).padStart(4,'0');
+  }
+
+  /* ═══════════ PIN ═══════════ */
+  function unlock(){ document.getElementById('gate').style.display='none'; $('#app').hidden=false; initApp(); }
+  function tryPin(){
+    const v = $('#pin').value.trim();
+    if(v === ADMIN_PIN){ try{ sessionStorage.setItem(AKEY,'1'); }catch(e){} unlock(); }
+    else { $('#pin-err').textContent = 'PIN incorrecto. Intenta de nuevo.'; $('#pin').value=''; $('#pin').focus(); }
+  }
+  $('#pin-btn').addEventListener('click', tryPin);
+  $('#pin').addEventListener('keydown', e=>{ if(e.key==='Enter') tryPin(); });
+  $('#logout').addEventListener('click', ()=>{ try{ sessionStorage.removeItem(AKEY); }catch(e){} location.reload(); });
+  try{ if(sessionStorage.getItem(AKEY)==='1') unlock(); else $('#pin').focus(); }catch(e){ $('#pin').focus(); }
+
+  /* ═══════════ CATÁLOGO ═══════════ */
+  function buildCatalog(){
+    const cats = [...new Set(COTIZADOR_MENU.map(i=>i.cat))];
+    const sel = $('#cat-filter');
+    cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+    $('#count-tag').textContent = COTIZADOR_MENU.length + ' productos';
+    renderCatalog();
+  }
+  function renderCatalog(){
+    const q = ($('#search').value||'').toLowerCase().trim();
+    const cf = $('#cat-filter').value;
+    const list = $('#cat-list'); list.innerHTML='';
+    let items = COTIZADOR_MENU.filter(i=>{
+      if(cf && i.cat!==cf) return false;
+      if(q && !(i.name.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    if(!items.length){ list.innerHTML='<div class="empty">Sin resultados.</div>'; return; }
+    const groups = {};
+    items.forEach(i=>{ (groups[i.cat]=groups[i.cat]||[]).push(i); });
+    Object.keys(groups).forEach(cat=>{
+      const gt=document.createElement('div'); gt.className='cat-group-title'; gt.textContent=cat; list.appendChild(gt);
+      groups[cat].forEach(i=>{
+        const row=document.createElement('div'); row.className='menu-item';
+        row.innerHTML = `<span class="mi-name">${esc(i.name)}</span><span class="mi-price">${money(i.price)}</span>`;
+        const b=document.createElement('button'); b.className='mi-add'; b.type='button'; b.textContent='+';
+        b.title='Agregar a la cotización';
+        b.addEventListener('click', ()=> addLine(i.name, i.price, false));
+        row.appendChild(b); list.appendChild(row);
+      });
+    });
+  }
+  $('#search').addEventListener('input', renderCatalog);
+  $('#cat-filter').addEventListener('change', renderCatalog);
+
+  /* ═══════════ LÍNEAS ═══════════ */
+  function addLine(name, price, editable){
+    const existing = !editable ? state.lines.find(l=>!l.editable && l.name===name && Number(l.price)===Number(price)) : null;
+    if(existing){ existing.qty += 1; }
+    else state.lines.push({ name, qty:1, price:Number(price)||0, editable:!!editable });
+    saveDraft(); renderLines(); toast('+ ' + (name||'concepto'));
+  }
+  function renderLines(){
+    const tb = $('#lines-body'); tb.innerHTML='';
+    if(!state.lines.length){
+      tb.innerHTML = '<tr class="empty-lines"><td colspan="5">Agrega platillos del menú o un servicio libre.</td></tr>';
+    }
+    state.lines.forEach((l,idx)=>{
+      const tr=document.createElement('tr');
+      const nameCell = l.editable
+        ? `<input value="${esc(l.name)}" placeholder="Concepto / servicio" data-k="name" data-i="${idx}">`
+        : `<span class="fixed">${esc(l.name)}</span>`;
+      tr.innerHTML = `
+        <td class="l-name">${nameCell}</td>
+        <td class="num"><input class="qty" type="number" min="0" step="1" value="${l.qty}" data-k="qty" data-i="${idx}"></td>
+        <td class="num"><input class="price" type="number" min="0" step="1" value="${l.price}" data-k="price" data-i="${idx}"></td>
+        <td class="num l-sub">${money(l.qty*l.price)}</td>
+        <td class="num"><button class="l-del" title="Quitar" data-del="${idx}">✕</button></td>`;
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('input[data-k]').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const i=+e.target.dataset.i, k=e.target.dataset.k;
+        if(k==='name') state.lines[i].name = e.target.value;
+        else state.lines[i][k] = k==='qty' ? Math.max(0, parseInt(e.target.value||0,10)) : Math.max(0, parseFloat(e.target.value||0));
+        if(k!=='name'){ // update its subtotal live without full rerender
+          state.lines[i]._dirty=true;
+        }
+        saveDraft(); updateSubtotalCell(i); recalc();
+      });
+    });
+    tb.querySelectorAll('[data-del]').forEach(b=>{
+      b.addEventListener('click', e=>{ state.lines.splice(+e.target.dataset.del,1); saveDraft(); renderLines(); recalc(); });
+    });
+    recalc();
+  }
+  function updateSubtotalCell(i){
+    const tb=$('#lines-body'); const row=tb.children[i]; if(!row) return;
+    const l=state.lines[i]; row.querySelector('.l-sub').textContent = money(l.qty*l.price);
+  }
+
+  function recalc(){
+    const sub = state.lines.reduce((s,l)=> s + (l.qty*l.price), 0);
+    const iva = state.iva ? sub*IVA_RATE : 0;
+    $('#t-sub').textContent = money(sub);
+    $('#row-iva').hidden = !state.iva;
+    $('#t-iva').textContent = money(iva);
+    $('#t-total').textContent = money(sub+iva);
+  }
+
+  $('#add-service').addEventListener('click', ()=> addLine('', 0, true));
+  $('#iva-toggle').addEventListener('change', e=>{ state.iva=e.target.checked; saveDraft(); recalc(); });
+
+  /* ═══════════ CAMPOS CLIENTE ═══════════ */
+  const fieldMap = {'c-cliente':'cliente','c-empresa':'empresa','c-fecha':'fecha','c-contacto':'contacto','c-notas':'notas'};
+  function bindFields(){
+    Object.entries(fieldMap).forEach(([id,key])=>{
+      const el=document.getElementById(id); el.value = state[key]||'';
+      el.addEventListener('input', ()=>{ state[key]=el.value; saveDraft(); });
+    });
+    $('#iva-toggle').checked = !!state.iva;
+    $('#folio-tag').textContent = state.folio || '';
+  }
+
+  /* ═══════════ SALIDAS ═══════════ */
+  function totals(){
+    const sub = state.lines.reduce((s,l)=> s + (l.qty*l.price), 0);
+    const iva = state.iva ? sub*IVA_RATE : 0;
+    return { sub, iva, total: sub+iva };
+  }
+  function fechaLarga(d){
+    if(!d) return '';
+    try{ const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+    catch(e){ return d; }
+  }
+  function hoyLargo(){ return new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+
+  function buildSheet(){
+    const t = totals();
+    const rows = state.lines.filter(l=>l.name||l.price).map(l=>`
+      <tr><td>${esc(l.name||'—')}</td><td class="num">${l.qty}</td><td class="num">${money(l.price)}</td><td class="num">${money(l.qty*l.price)}</td></tr>`).join('');
+    const ivaRow = state.iva ? `<div class="r"><span>IVA 16%</span><span>${money(t.iva)}</span></div>` : '';
+    const notas = state.notas ? `<div class="notes"><span class="b">Comentarios / condiciones</span>${esc(state.notas).replace(/\n/g,'<br>')}</div>` : '';
+    return `
+    <div class="sheet">
+      <div class="lh">
+        <img src="${LOGO}" alt="">
+        <div class="biz">
+          <div class="name">${BIZ.name}</div>
+          <div class="tag">${BIZ.tagline}</div>
+          <div class="contact">${esc(BIZ.address)}<br>Tel. ${esc(BIZ.phone)}</div>
+        </div>
+        <div class="doc">
+          <div class="word">COTIZACIÓN</div>
+          <div class="folio">${esc(state.folio||'')}</div>
+          <div class="date">${hoyLargo()}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div><span class="b">Cliente</span>${esc(state.cliente||'—')}${state.empresa?'<br>'+esc(state.empresa):''}${state.contacto?'<br>'+esc(state.contacto):''}</div>
+        <div style="text-align:right"><span class="b">Fecha del evento / servicio</span>${esc(fechaLarga(state.fecha)||'Por definir')}</div>
+      </div>
+      <table class="items">
+        <thead><tr><th>Concepto</th><th class="num">Cant.</th><th class="num">P. unit.</th><th class="num">Importe</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" style="text-align:center;color:#999">Sin conceptos</td></tr>'}</tbody>
+      </table>
+      <div class="sum">
+        <div class="r"><span>Subtotal</span><span>${money(t.sub)}</span></div>
+        ${ivaRow}
+        <div class="r grand"><span>Total</span><span>${money(t.total)}</span></div>
+      </div>
+      ${notas}
+      <div class="foot">
+        <span class="thanks">¡Gracias por su preferencia!</span>
+        ${esc(BIZ.name)} — ${esc(BIZ.tagline)} · ${esc(BIZ.phone)}<br>
+        Cotización válida por 15 días. Precios en pesos mexicanos (MXN).
+      </div>
+    </div>`;
+  }
+
+  $('#btn-print').addEventListener('click', ()=>{
+    if(!state.lines.length){ toast('Agrega al menos un concepto'); return; }
+    // commit folio number once it is used in a real document
+    document.getElementById('print-doc').innerHTML = buildSheet();
+    window.print();
+  });
+
+  function buildText(){
+    const t = totals();
+    let s = `*${BIZ.name}* — Cotización ${state.folio||''}\n${BIZ.tagline}\n`;
+    s += `Fecha: ${hoyLargo()}\n`;
+    if(state.cliente) s += `Cliente: ${state.cliente}\n`;
+    if(state.empresa) s += `Empresa: ${state.empresa}\n`;
+    if(state.fecha) s += `Evento/servicio: ${fechaLarga(state.fecha)}\n`;
+    s += `\n`;
+    state.lines.filter(l=>l.name||l.price).forEach(l=>{
+      s += `• ${l.qty} × ${l.name||'—'}  —  ${money(l.qty*l.price)}\n`;
+    });
+    s += `\nSubtotal: ${money(t.sub)}\n`;
+    if(state.iva) s += `IVA 16%: ${money(t.iva)}\n`;
+    s += `*Total: ${money(t.total)}*\n`;
+    if(state.notas) s += `\n${state.notas}\n`;
+    s += `\n${BIZ.address}\nTel. ${BIZ.phone}`;
+    return s;
+  }
+
+  $('#btn-wa').addEventListener('click', ()=>{
+    if(!state.lines.length){ toast('Agrega al menos un concepto'); return; }
+    const txt = encodeURIComponent(buildText());
+    const url = WHATSAPP_DEFAULT ? `https://wa.me/${WHATSAPP_DEFAULT}?text=${txt}` : `https://wa.me/?text=${txt}`;
+    window.open(url, '_blank');
+  });
+
+  $('#btn-copy').addEventListener('click', async ()=>{
+    const txt = buildText();
+    try{ await navigator.clipboard.writeText(txt); toast('Texto copiado'); }
+    catch(e){
+      const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); toast('Texto copiado'); }catch(_){ toast('No se pudo copiar'); }
+      ta.remove();
+    }
+  });
+
+  $('#btn-clear').addEventListener('click', ()=>{
+    if(!confirm('¿Iniciar una cotización nueva? Se limpiarán los datos actuales.')) return;
+    // consume current folio (it was used or discarded) and assign a fresh committed one
+    const fresh = nextFolio(true);
+    state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, folio:fresh, lines:[] };
+    saveDraft(); bindFields(); renderLines(); recalc();
+    toast('Nueva cotización ' + fresh);
+  });
+
+  /* ═══════════ UTILES ═══════════ */
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  let toastT;
+  function toast(m){ const el=$('#toast'); el.textContent=m; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),1600); }
+
+  /* ═══════════ INIT ═══════════ */
+  function initApp(){
+    loadDraft();
+    buildCatalog();
+    bindFields();
+    renderLines();
+    recalc();
+  }
+  </script>
+</body>
+</html>
