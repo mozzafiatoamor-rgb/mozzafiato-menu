@@ -150,6 +150,12 @@
     .btn-save:hover{background:var(--gold)}
     .btn-saved{background:var(--bg2); color:var(--gold-dark); border:1px solid var(--line)!important; grid-column:1 / -1}
     .btn-saved:hover{background:#ded7c6}
+    .btn-export{background:var(--bg2); color:var(--gold-dark); border:1px solid var(--line)!important; grid-column:1 / -1}
+    .btn-export:hover{background:#ded7c6}
+    .saved-tools{display:flex; gap:8px; padding:14px 18px 0; flex-wrap:wrap}
+    .saved-tools button{flex:1; min-width:130px; padding:9px 10px; border-radius:9px; border:1px solid var(--gold-dark); background:var(--gold-dark); color:var(--footer-text); font-size:.82rem}
+    .saved-tools button.sec{background:var(--bg); color:var(--gold-dark); border-color:var(--line)}
+    .saved-tools button:hover{opacity:.9}
 
     /* header saved btn */
     header .hdr-saved{background:transparent; border:1px solid rgba(212,196,154,.4); color:var(--footer-text); border-radius:8px; padding:7px 12px; font-size:.8rem; margin-right:6px}
@@ -162,7 +168,7 @@
     .saved-row .sv-name{font-size:.86rem; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
     .saved-row .sv-meta{font-size:.72rem; color:var(--text-soft)}
     .saved-row .sv-total{font-family:var(--display); color:var(--gold-dark); font-weight:700; white-space:nowrap; font-size:.9rem}
-    .saved-row .sv-btns{display:flex; gap:4px; flex:none}
+    .saved-row .sv-btns{display:flex; gap:4px; flex:none; flex-wrap:wrap; justify-content:flex-end; max-width:150px}
     .saved-row .sv-btns button{border:1px solid var(--line); background:var(--bg); border-radius:8px; padding:6px 8px; font-size:.72rem; color:var(--gold-dark)}
     .saved-row .sv-btns button:hover{background:var(--gold-dark); color:#fff}
     .saved-row .sv-btns .del{color:var(--danger)}
@@ -335,6 +341,7 @@
             <button class="btn-print" id="btn-print">🖨️ Imprimir / Guardar PDF</button>
             <button class="btn-wa" id="btn-wa">Enviar por WhatsApp</button>
             <button class="btn-copy" id="btn-copy">Copiar texto</button>
+            <button class="btn-export" id="btn-export">⬇️ Exportar a archivo</button>
             <button class="btn-saved" id="btn-saved">📁 Ver cotizaciones guardadas</button>
             <button class="btn-clear" id="btn-clear">Nueva cotización (limpiar)</button>
           </div>
@@ -362,6 +369,11 @@
   <div class="modal-overlay" id="saved-modal">
     <div class="modal-card">
       <div class="modal-head"><h3>Cotizaciones guardadas</h3><button class="modal-x" id="saved-x" title="Cerrar">✕</button></div>
+      <div class="saved-tools">
+        <button id="imp-btn" class="sec">⬆️ Importar archivo</button>
+        <button id="exp-all-btn">⬇️ Exportar todas</button>
+      </div>
+      <input type="file" id="imp-file" accept="application/json,.json" hidden>
       <div class="modal-body" id="saved-list"></div>
     </div>
   </div>
@@ -757,9 +769,10 @@
         <div class="sv-total">${money(e.total||0)}</div>`;
       const btns=document.createElement('div'); btns.className='sv-btns';
       const bOpen=document.createElement('button'); bOpen.textContent='Abrir'; bOpen.addEventListener('click',()=>loadSaved(e.id));
+      const bExp =document.createElement('button'); bExp.textContent='Exportar'; bExp.addEventListener('click',()=>exportOne(e.id));
       const bDup =document.createElement('button'); bDup.textContent='Duplicar'; bDup.addEventListener('click',()=>duplicateSaved(e.id));
       const bDel =document.createElement('button'); bDel.className='del'; bDel.textContent='Eliminar'; bDel.addEventListener('click',()=>deleteSaved(e.id));
-      btns.appendChild(bOpen); btns.appendChild(bDup); btns.appendChild(bDel);
+      btns.appendChild(bOpen); btns.appendChild(bExp); btns.appendChild(bDup); btns.appendChild(bDel);
       row.appendChild(btns); box.appendChild(row);
     });
     $('#saved-modal').classList.add('open');
@@ -794,6 +807,64 @@
   $('#saved-x').addEventListener('click', closeSavedList);
   $('#saved-modal').addEventListener('click', e=>{ if(e.target.id==='saved-modal') closeSavedList(); });
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSavedList(); });
+
+  /* ── Exportar / Importar por archivo (portabilidad entre dispositivos) ── */
+  function download(filename, text){
+    try{
+      const blob=new Blob([text],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a'); a.href=url; a.download=filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1500);
+    }catch(e){ toast('No se pudo descargar el archivo'); }
+  }
+  function slug(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase(); }
+  function pkg(quotes){ return JSON.stringify({ app:'mozzafiato-cotizador', type:'cotizaciones', version:1, exportedAt:Date.now(), quotes:quotes }, null, 2); }
+
+  function exportCurrent(){
+    if(!state.lines.length){ toast('Agrega conceptos antes de exportar'); return; }
+    if(!state.id) state.id='q'+Date.now();
+    const entry={ id:state.id, folio:state.folio, cliente:state.cliente||'', empresa:state.empresa||'', total:totals().total, savedAt:Date.now(), state:snapshot() };
+    const name='cotizacion-'+(slug(state.folio)||'mozzafiato')+(state.cliente?('-'+slug(state.cliente)):'')+'.json';
+    download(name, pkg([entry])); toast('Cotización exportada');
+  }
+  function exportAll(){
+    const arr=getSaved();
+    if(!arr.length){ toast('No hay cotizaciones guardadas'); return; }
+    const d=new Date(); const ymd=''+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+    download('cotizaciones-mozzafiato-'+ymd+'.json', pkg(arr)); toast(arr.length+' cotizaciones exportadas');
+  }
+  function exportOne(id){
+    const e=getSaved().find(x=>x.id===id); if(!e) return;
+    download('cotizacion-'+(slug(e.folio)||'mozzafiato')+(e.cliente?('-'+slug(e.cliente)):'')+'.json', pkg([e]));
+    toast('Exportada '+(e.folio||''));
+  }
+  function importFile(file){
+    const rd=new FileReader();
+    rd.onload=function(){
+      let data; try{ data=JSON.parse(rd.result); }catch(e){ toast('Archivo no válido'); return; }
+      const quotes = Array.isArray(data) ? data : (data && data.quotes);
+      if(!Array.isArray(quotes) || !quotes.length){ toast('El archivo no contiene cotizaciones'); return; }
+      const arr=getSaved(); let added=0, updated=0;
+      quotes.forEach(function(q){
+        if(!q || !q.state) return;
+        if(!q.id) q.id='q'+Date.now()+Math.floor(Math.random()*1000);
+        if(typeof q.total!=='number') q.total=0;
+        if(!q.savedAt) q.savedAt=Date.now();
+        const idx=arr.findIndex(x=>x.id===q.id);
+        if(idx>=0){ arr[idx]=q; updated++; } else { arr.unshift(q); added++; }
+      });
+      setSaved(arr); openSavedList();
+      toast('Importadas: '+added+' nuevas'+(updated?(', '+updated+' actualizadas'):''));
+    };
+    rd.onerror=function(){ toast('No se pudo leer el archivo'); };
+    rd.readAsText(file);
+  }
+
+  $('#btn-export').addEventListener('click', exportCurrent);
+  $('#exp-all-btn').addEventListener('click', exportAll);
+  $('#imp-btn').addEventListener('click', ()=> $('#imp-file').click());
+  $('#imp-file').addEventListener('change', function(e){ const f=e.target.files[0]; if(f) importFile(f); e.target.value=''; });
 
   /* Protección ante cierre inesperado (además del autoguardado en cada cambio) */
   window.addEventListener('beforeunload', function(e){
