@@ -373,12 +373,30 @@
     </div>
   </div>
 
+  <!-- ══════════ MODAL PEGAR TEXTO ══════════ -->
+  <div class="modal-overlay" id="paste-modal">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Pegar cotización (texto)</h3><button class="modal-x" id="paste-x" title="Cerrar">✕</button></div>
+      <div class="modal-body">
+        <p style="font-size:.82rem;color:var(--text-soft);margin:0 0 8px">Abre el archivo .json que exportaste, selecciona todo el texto, cópialo y pégalo aquí. Sirve para pasar cotizaciones entre tu compu y tu celular sin depender del archivo.</p>
+        <textarea id="paste-text" placeholder='{ "app": "mozzafiato-cotizador", ... }' style="width:100%;min-height:150px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font-family:monospace;font-size:.78rem;outline:none"></textarea>
+      </div>
+      <div class="modal-foot">
+        <div class="modal-actions">
+          <button class="btn-cancel" id="paste-cancel">Cancelar</button>
+          <button class="btn-add-combo" id="paste-do">Importar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ MODAL COTIZACIONES GUARDADAS ══════════ -->
   <div class="modal-overlay" id="saved-modal">
     <div class="modal-card">
       <div class="modal-head"><h3>Cotizaciones guardadas</h3><button class="modal-x" id="saved-x" title="Cerrar">✕</button></div>
       <div class="saved-tools">
         <button id="imp-btn" class="sec">⬆️ Importar archivo</button>
+        <button id="paste-btn" class="sec">📋 Pegar texto</button>
         <button id="exp-all-btn">⬇️ Exportar todas</button>
       </div>
       <input type="file" id="imp-file" accept=".json,application/json,text/json,text/plain" hidden>
@@ -872,39 +890,51 @@
     download('cotizacion-'+(slug(e.folio)||'mozzafiato')+(e.cliente?('-'+slug(e.cliente)):'')+'.json', pkg([e]));
     toast('Exportada '+(e.folio||''));
   }
+  function importFromText(raw){
+    let text = String(raw||'').replace(/^﻿/,'').trim();   // quita BOM invisible y espacios
+    if(!text){ toast('Llegó vacío. Si está en iCloud/Drive, descárgalo primero o usa “Pegar texto”.'); return false; }
+    let data = null;
+    try{ data=JSON.parse(text); }
+    catch(e){
+      const a=text.indexOf('{'), b=text.lastIndexOf('}');       // recupera el JSON si viene envuelto
+      if(a>=0 && b>a){ try{ data=JSON.parse(text.slice(a,b+1)); }catch(_){} }
+    }
+    if(!data){ toast('No pude leer la cotización (¿pegaste el texto completo del .json?)'); return false; }
+    const quotes = Array.isArray(data) ? data : (data && data.quotes);
+    if(!Array.isArray(quotes) || !quotes.length){ toast('No contiene cotizaciones'); return false; }
+    const arr=getSaved(); let added=0, updated=0;
+    quotes.forEach(function(q){
+      if(!q || !q.state) return;
+      if(!q.id) q.id='q'+Date.now()+Math.floor(Math.random()*1000);
+      if(typeof q.total!=='number') q.total=0;
+      if(!q.savedAt) q.savedAt=Date.now();
+      const idx=arr.findIndex(x=>x.id===q.id);
+      if(idx>=0){ arr[idx]=q; updated++; } else { arr.unshift(q); added++; }
+    });
+    setSaved(arr); openSavedList();
+    toast('Importadas: '+added+' nuevas'+(updated?(', '+updated+' actualizadas'):''));
+    return true;
+  }
   function importFile(file){
     const rd=new FileReader();
-    rd.onload=function(){
-      let text = String(rd.result||'').replace(/^﻿/,'').trim();   // quita BOM invisible y espacios
-      let data = null;
-      try{ data=JSON.parse(text); }
-      catch(e){
-        const a=text.indexOf('{'), b=text.lastIndexOf('}');           // recupera el JSON si viene envuelto
-        if(a>=0 && b>a){ try{ data=JSON.parse(text.slice(a,b+1)); }catch(_){} }
-      }
-      if(!data){ toast('Archivo no válido (usa el .json que exportaste)'); return; }
-      const quotes = Array.isArray(data) ? data : (data && data.quotes);
-      if(!Array.isArray(quotes) || !quotes.length){ toast('El archivo no contiene cotizaciones'); return; }
-      const arr=getSaved(); let added=0, updated=0;
-      quotes.forEach(function(q){
-        if(!q || !q.state) return;
-        if(!q.id) q.id='q'+Date.now()+Math.floor(Math.random()*1000);
-        if(typeof q.total!=='number') q.total=0;
-        if(!q.savedAt) q.savedAt=Date.now();
-        const idx=arr.findIndex(x=>x.id===q.id);
-        if(idx>=0){ arr[idx]=q; updated++; } else { arr.unshift(q); added++; }
-      });
-      setSaved(arr); openSavedList();
-      toast('Importadas: '+added+' nuevas'+(updated?(', '+updated+' actualizadas'):''));
-    };
-    rd.onerror=function(){ toast('No se pudo leer el archivo'); };
-    rd.readAsText(file);
+    rd.onload=function(){ importFromText(rd.result); };
+    rd.onerror=function(){ toast('No se pudo leer el archivo (¿está descargado en el dispositivo?)'); };
+    try{ rd.readAsText(file); }catch(e){ toast('No se pudo abrir el archivo'); }
   }
 
   $('#btn-export').addEventListener('click', exportCurrent);
   $('#exp-all-btn').addEventListener('click', exportAll);
   $('#imp-btn').addEventListener('click', ()=> $('#imp-file').click());
   $('#imp-file').addEventListener('change', function(e){ const f=e.target.files[0]; if(f) importFile(f); e.target.value=''; });
+
+  // Importar pegando texto (evita problemas de lectura de archivos en el celular)
+  function openPaste(){ closeSavedList(); $('#paste-text').value=''; $('#paste-modal').classList.add('open'); setTimeout(()=>$('#paste-text').focus(),50); }
+  function closePaste(){ $('#paste-modal').classList.remove('open'); }
+  $('#paste-btn').addEventListener('click', openPaste);
+  $('#paste-x').addEventListener('click', closePaste);
+  $('#paste-cancel').addEventListener('click', closePaste);
+  $('#paste-do').addEventListener('click', function(){ if(importFromText($('#paste-text').value)) closePaste(); });
+  $('#paste-modal').addEventListener('click', e=>{ if(e.target.id==='paste-modal') closePaste(); });
 
   /* Protección ante cierre inesperado (además del autoguardado en cada cambio) */
   window.addEventListener('beforeunload', function(e){
