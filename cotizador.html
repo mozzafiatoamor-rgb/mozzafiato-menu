@@ -146,6 +146,28 @@
     .btn-copy:hover{background:#b59a6c}
     .btn-clear{background:transparent; color:var(--danger); border:1px solid rgba(165,72,47,.35)!important; grid-column:1 / -1}
     .btn-clear:hover{background:rgba(165,72,47,.08)}
+    .btn-save{background:var(--gold-dark); color:var(--footer-text); grid-column:1 / -1}
+    .btn-save:hover{background:var(--gold)}
+    .btn-saved{background:var(--bg2); color:var(--gold-dark); border:1px solid var(--line)!important; grid-column:1 / -1}
+    .btn-saved:hover{background:#ded7c6}
+
+    /* header saved btn */
+    header .hdr-saved{background:transparent; border:1px solid rgba(212,196,154,.4); color:var(--footer-text); border-radius:8px; padding:7px 12px; font-size:.8rem; margin-right:6px}
+    header .hdr-saved:hover{background:rgba(212,196,154,.12)}
+
+    /* saved list */
+    .saved-row{display:flex; align-items:center; gap:10px; padding:11px 4px; border-bottom:1px dashed var(--line)}
+    .saved-row .sv-info{flex:1; min-width:0}
+    .saved-row .sv-folio{font-family:var(--display); color:var(--gold-dark); font-size:.92rem}
+    .saved-row .sv-name{font-size:.86rem; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+    .saved-row .sv-meta{font-size:.72rem; color:var(--text-soft)}
+    .saved-row .sv-total{font-family:var(--display); color:var(--gold-dark); font-weight:700; white-space:nowrap; font-size:.9rem}
+    .saved-row .sv-btns{display:flex; gap:4px; flex:none}
+    .saved-row .sv-btns button{border:1px solid var(--line); background:var(--bg); border-radius:8px; padding:6px 8px; font-size:.72rem; color:var(--gold-dark)}
+    .saved-row .sv-btns button:hover{background:var(--gold-dark); color:#fff}
+    .saved-row .sv-btns .del{color:var(--danger)}
+    .saved-row .sv-btns .del:hover{background:var(--danger); color:#fff}
+    .saved-empty{color:var(--text-soft); font-style:italic; text-align:center; padding:24px}
 
     .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
       background:var(--gold-dark); color:#fff; padding:12px 22px; border-radius:30px; font-size:.9rem;
@@ -241,6 +263,7 @@
         <div class="t">Mozzafiato</div>
         <div class="s">Cotizador de eventos y servicios</div>
       </div>
+      <button class="hdr-saved" id="hdr-saved">📁 Guardadas</button>
       <button class="logout" id="logout">Salir</button>
     </header>
 
@@ -308,9 +331,11 @@
           </div>
 
           <div class="actions">
+            <button class="btn-save" id="btn-save">💾 Guardar cotización</button>
             <button class="btn-print" id="btn-print">🖨️ Imprimir / Guardar PDF</button>
             <button class="btn-wa" id="btn-wa">Enviar por WhatsApp</button>
             <button class="btn-copy" id="btn-copy">Copiar texto</button>
+            <button class="btn-saved" id="btn-saved">📁 Ver cotizaciones guardadas</button>
             <button class="btn-clear" id="btn-clear">Nueva cotización (limpiar)</button>
           </div>
         </div>
@@ -330,6 +355,14 @@
           <button class="btn-add-combo" id="modal-add">Agregar</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MODAL COTIZACIONES GUARDADAS ══════════ -->
+  <div class="modal-overlay" id="saved-modal">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Cotizaciones guardadas</h3><button class="modal-x" id="saved-x" title="Cerrar">✕</button></div>
+      <div class="modal-body" id="saved-list"></div>
     </div>
   </div>
 
@@ -371,7 +404,7 @@
 
   function loadDraft(){
     try{ const d = JSON.parse(localStorage.getItem(SKEY)); if(d) state = Object.assign(state,d); }catch(e){}
-    if(!state.folio) state.folio = nextFolio(false);
+    if(!state.folio) state.folio = nextFolio(true);
   }
   function saveDraft(){ try{ localStorage.setItem(SKEY, JSON.stringify(state)); }catch(e){} }
 
@@ -686,6 +719,85 @@
     state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, folio:fresh, lines:[] };
     saveDraft(); bindFields(); renderLines(); recalc();
     toast('Nueva cotización ' + fresh);
+  });
+
+  /* ═══════════ GUARDAR / COTIZACIONES GUARDADAS ═══════════ */
+  const GKEY = "mozza_cotizador_guardadas";
+  function getSaved(){ try{ return JSON.parse(localStorage.getItem(GKEY)) || []; }catch(e){ return []; } }
+  function setSaved(a){ try{ localStorage.setItem(GKEY, JSON.stringify(a)); }catch(e){} }
+  function snapshot(){ return JSON.parse(JSON.stringify(state)); }
+
+  function saveCurrent(){
+    if(!state.lines.length){ toast('Agrega conceptos antes de guardar'); return; }
+    if(!state.id) state.id = 'q' + Date.now();
+    const arr = getSaved();
+    const entry = { id:state.id, folio:state.folio, cliente:state.cliente||'', empresa:state.empresa||'',
+                    total:totals().total, savedAt:Date.now(), state:snapshot() };
+    const idx = arr.findIndex(e=>e.id===state.id);
+    if(idx>=0) arr[idx]=entry; else arr.unshift(entry);
+    setSaved(arr); saveDraft();
+    toast('Cotización guardada · ' + (state.folio||''));
+  }
+
+  function fmtSavedDate(ts){
+    try{ return new Date(ts).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+    catch(e){ return ''; }
+  }
+  function openSavedList(){
+    const arr = getSaved().slice().sort((a,b)=> b.savedAt - a.savedAt);
+    const box = $('#saved-list'); box.innerHTML='';
+    if(!arr.length){ box.innerHTML='<div class="saved-empty">Aún no has guardado cotizaciones.<br>Usa “Guardar cotización”.</div>'; }
+    arr.forEach(e=>{
+      const row=document.createElement('div'); row.className='saved-row';
+      row.innerHTML = `<div class="sv-info">
+          <div class="sv-folio">${esc(e.folio||'')}${e.id===state.id?' · <span style="color:var(--gold)">abierta</span>':''}</div>
+          <div class="sv-name">${esc(e.cliente||'Sin nombre')}${e.empresa?' · '+esc(e.empresa):''}</div>
+          <div class="sv-meta">Guardada: ${fmtSavedDate(e.savedAt)}</div>
+        </div>
+        <div class="sv-total">${money(e.total||0)}</div>`;
+      const btns=document.createElement('div'); btns.className='sv-btns';
+      const bOpen=document.createElement('button'); bOpen.textContent='Abrir'; bOpen.addEventListener('click',()=>loadSaved(e.id));
+      const bDup =document.createElement('button'); bDup.textContent='Duplicar'; bDup.addEventListener('click',()=>duplicateSaved(e.id));
+      const bDel =document.createElement('button'); bDel.className='del'; bDel.textContent='Eliminar'; bDel.addEventListener('click',()=>deleteSaved(e.id));
+      btns.appendChild(bOpen); btns.appendChild(bDup); btns.appendChild(bDel);
+      row.appendChild(btns); box.appendChild(row);
+    });
+    $('#saved-modal').classList.add('open');
+  }
+  function closeSavedList(){ $('#saved-modal').classList.remove('open'); }
+
+  function loadSaved(id){
+    const e = getSaved().find(x=>x.id===id); if(!e) return;
+    state = Object.assign({ cliente:'',empresa:'',fecha:'',contacto:'',notas:'',iva:false,folio:'',lines:[] }, JSON.parse(JSON.stringify(e.state)));
+    state.id = id;
+    saveDraft(); bindFields(); renderLines(); recalc(); closeSavedList();
+    toast('Abierta ' + (state.folio||''));
+  }
+  function duplicateSaved(id){
+    const e = getSaved().find(x=>x.id===id); if(!e) return;
+    const arr = getSaved();
+    const nid = 'q' + Date.now();
+    const nfolio = nextFolio(true);
+    const st = JSON.parse(JSON.stringify(e.state)); st.id=nid; st.folio=nfolio;
+    arr.unshift({ id:nid, folio:nfolio, cliente:st.cliente||'', empresa:st.empresa||'', total:e.total||0, savedAt:Date.now(), state:st });
+    setSaved(arr); openSavedList(); toast('Duplicada como ' + nfolio);
+  }
+  function deleteSaved(id){
+    if(!confirm('¿Eliminar esta cotización guardada? No se puede deshacer.')) return;
+    setSaved(getSaved().filter(x=>x.id!==id));
+    openSavedList();
+  }
+
+  $('#btn-save').addEventListener('click', saveCurrent);
+  $('#btn-saved').addEventListener('click', openSavedList);
+  $('#hdr-saved').addEventListener('click', openSavedList);
+  $('#saved-x').addEventListener('click', closeSavedList);
+  $('#saved-modal').addEventListener('click', e=>{ if(e.target.id==='saved-modal') closeSavedList(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSavedList(); });
+
+  /* Protección ante cierre inesperado (además del autoguardado en cada cambio) */
+  window.addEventListener('beforeunload', function(e){
+    if(state.lines && state.lines.length){ e.preventDefault(); e.returnValue=''; }
   });
 
   /* ═══════════ UTILES ═══════════ */
