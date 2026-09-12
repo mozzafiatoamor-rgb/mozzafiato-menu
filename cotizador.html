@@ -138,8 +138,10 @@
 
     .actions{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px}
     .actions button{padding:12px; border-radius:11px; border:none; font-size:.92rem; letter-spacing:.02em; display:flex; align-items:center; justify-content:center; gap:7px}
-    .btn-print{background:var(--gold-dark); color:var(--footer-text); grid-column:1 / -1}
+    .btn-print{background:var(--gold-dark); color:var(--footer-text)}
     .btn-print:hover{background:var(--gold)}
+    .btn-print2{background:var(--bg2); color:var(--gold-dark); border:1px solid var(--gold-dark)!important}
+    .btn-print2:hover{background:#ded7c6}
     .btn-wa{background:#1f7a4d; color:#fff}
     .btn-wa:hover{background:#166138}
     .btn-copy{background:var(--gold-light); color:var(--gold-dark)}
@@ -212,10 +214,15 @@
     /* ── PRINT / LETTERHEAD DOCUMENT ── */
     #print-doc{display:none}
     @media print{
-      @page{ margin:14mm 14mm 16mm; }
-      #gate, #app, .toast{display:none!important}
+      @page{ margin:12mm; }
+      html,body{ margin:0!important; }
+      #gate, #app, .toast, .modal-overlay{display:none!important}
       body{background:#fff!important; background-image:none!important}
       #print-doc{display:block!important}
+      .sheet, .sheet *{ -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+      .sheet{ padding-top:2mm; }
+      .sheet .lh{ page-break-inside:avoid; }
+      .sheet table.items tr, .sheet .sum, .sheet .foot{ page-break-inside:avoid; }
     }
     /* on-screen preview reuse (hidden normally) */
     .sheet{max-width:720px; margin:0 auto; color:#2c2417; font-family:var(--serif)}
@@ -338,10 +345,11 @@
 
           <div class="actions">
             <button class="btn-save" id="btn-save">💾 Guardar cotización</button>
-            <button class="btn-print" id="btn-print">🖨️ Imprimir / Guardar PDF</button>
+            <button class="btn-print" id="btn-pdf">📄 Descargar PDF</button>
+            <button class="btn-print2" id="btn-print">🖨️ Imprimir</button>
             <button class="btn-wa" id="btn-wa">Enviar por WhatsApp</button>
             <button class="btn-copy" id="btn-copy">Copiar texto</button>
-            <button class="btn-export" id="btn-export">⬇️ Exportar a archivo</button>
+            <button class="btn-export" id="btn-export">📤 Exportar a archivo</button>
             <button class="btn-saved" id="btn-saved">📁 Ver cotizaciones guardadas</button>
             <button class="btn-clear" id="btn-clear">Nueva cotización (limpiar)</button>
           </div>
@@ -373,7 +381,7 @@
         <button id="imp-btn" class="sec">⬆️ Importar archivo</button>
         <button id="exp-all-btn">⬇️ Exportar todas</button>
       </div>
-      <input type="file" id="imp-file" accept="application/json,.json" hidden>
+      <input type="file" id="imp-file" accept=".json,application/json,text/json,text/plain" hidden>
       <div class="modal-body" id="saved-list"></div>
     </div>
   </div>
@@ -384,6 +392,7 @@
   <div class="toast" id="toast"></div>
 
   <script src="cotizador-data.js"></script>
+  <script src="html2pdf.bundle.min.js"></script>
   <script>
   /* ═══════════════════════════════════════════════
      CONFIGURACIÓN — cambia tu PIN aquí
@@ -681,11 +690,35 @@
     </div>`;
   }
 
-  $('#btn-print').addEventListener('click', ()=>{
+  function pdfFilename(){ return 'cotizacion-'+(slug(state.folio)||'mozzafiato')+(state.cliente?('-'+slug(state.cliente)):'')+'.pdf'; }
+
+  $('#btn-print').addEventListener('click', ()=>{  // Imprimir (papel / diálogo del navegador)
     if(!state.lines.length){ toast('Agrega al menos un concepto'); return; }
-    // commit folio number once it is used in a real document
     document.getElementById('print-doc').innerHTML = buildSheet();
     window.print();
+  });
+
+  $('#btn-pdf').addEventListener('click', ()=>{  // Descargar PDF (independiente del navegador)
+    if(!state.lines.length){ toast('Agrega al menos un concepto'); return; }
+    if(typeof html2pdf === 'undefined'){  // respaldo si no cargó la librería
+      document.getElementById('print-doc').innerHTML = buildSheet();
+      toast('Elige “Guardar como PDF” en el diálogo'); window.print(); return;
+    }
+    const holder=document.createElement('div');
+    holder.style.cssText='position:absolute; left:0; top:0; width:760px; background:#fff; z-index:-1';
+    holder.innerHTML = buildSheet();
+    document.body.appendChild(holder);
+    const sheet = holder.querySelector('.sheet');
+    toast('Generando PDF…');
+    html2pdf().set({
+      margin:[12,12,14,12],
+      filename: pdfFilename(),
+      image:{ type:'jpeg', quality:0.98 },
+      html2canvas:{ scale:2, useCORS:true, backgroundColor:'#ffffff', scrollX:0, scrollY:0 },
+      jsPDF:{ unit:'mm', format:'letter', orientation:'portrait' },
+      pagebreak:{ mode:['css','legacy'] }
+    }).from(sheet).save().then(()=>{ holder.remove(); toast('PDF descargado'); })
+      .catch(()=>{ holder.remove(); toast('No se pudo generar el PDF'); });
   });
 
   function buildText(){
@@ -842,7 +875,14 @@
   function importFile(file){
     const rd=new FileReader();
     rd.onload=function(){
-      let data; try{ data=JSON.parse(rd.result); }catch(e){ toast('Archivo no válido'); return; }
+      let text = String(rd.result||'').replace(/^﻿/,'').trim();   // quita BOM invisible y espacios
+      let data = null;
+      try{ data=JSON.parse(text); }
+      catch(e){
+        const a=text.indexOf('{'), b=text.lastIndexOf('}');           // recupera el JSON si viene envuelto
+        if(a>=0 && b>a){ try{ data=JSON.parse(text.slice(a,b+1)); }catch(_){} }
+      }
+      if(!data){ toast('Archivo no válido (usa el .json que exportaste)'); return; }
       const quotes = Array.isArray(data) ? data : (data && data.quotes);
       if(!Array.isArray(quotes) || !quotes.length){ toast('El archivo no contiene cotizaciones'); return; }
       const arr=getSaved(); let added=0, updated=0;
