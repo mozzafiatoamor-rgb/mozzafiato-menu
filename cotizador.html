@@ -154,6 +154,33 @@
 
     .folio-tag{font-size:.72rem; color:var(--gold); letter-spacing:.08em}
 
+    /* ── COMBO ROW ── */
+    .menu-item.is-combo .mi-name .combo-badge{display:inline-block; font-size:.58rem; letter-spacing:.09em; text-transform:uppercase; color:#fff; background:var(--gold); border-radius:6px; padding:1px 6px; margin-left:5px; vertical-align:middle}
+    .menu-item.is-combo .mi-price{font-style:italic; font-size:.82rem; color:var(--gold)}
+    .menu-item.is-combo .mi-add{border-color:var(--gold-dark); font-size:.95rem}
+
+    /* ── MODAL CONFIGURADOR ── */
+    .modal-overlay{position:fixed; inset:0; z-index:40; background:rgba(58,48,32,.5); display:none; align-items:center; justify-content:center; padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal-card{background:var(--white); border-radius:16px; width:100%; max-width:430px; max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.3)}
+    .modal-head{display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line)}
+    .modal-head h3{font-size:1.15rem}
+    .modal-x{border:none; background:transparent; font-size:1.2rem; color:var(--text-soft); padding:4px 9px; border-radius:6px}
+    .modal-x:hover{background:var(--bg)}
+    .modal-body{padding:14px 18px 4px}
+    .modal-body select{width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); font-size:.95rem; outline:none}
+    .modal-body select:focus{border-color:var(--gold)}
+    .modal-foot{padding:14px 18px; border-top:1px solid var(--line); background:var(--bg)}
+    .modal-sumline{display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:12px}
+    .modal-sumline .mp-name{font-size:.9rem; color:var(--gold-dark); font-family:var(--display); line-height:1.3}
+    .modal-sumline .mp-price{font-family:var(--display); color:var(--gold-dark); font-size:1.35rem; font-weight:700; white-space:nowrap}
+    .modal-actions{display:flex; gap:10px}
+    .modal-actions button{flex:1; padding:12px; border-radius:11px; border:none; font-size:.9rem}
+    .btn-cancel{background:transparent; color:var(--text-soft); border:1px solid var(--line)!important}
+    .btn-cancel:hover{background:#efe9dc}
+    .btn-add-combo{background:var(--gold-dark); color:var(--footer-text)}
+    .btn-add-combo:hover{background:var(--gold)}
+
     /* ── PRINT / LETTERHEAD DOCUMENT ── */
     #print-doc{display:none}
     @media print{
@@ -291,6 +318,21 @@
     </div>
   </div>
 
+  <!-- ══════════ MODAL CONFIGURADOR ══════════ -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="modal-title">Configurar</h3><button class="modal-x" id="modal-x" title="Cerrar">✕</button></div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-foot">
+        <div class="modal-sumline"><span class="mp-name" id="modal-preview"></span><span class="mp-price" id="modal-price"></span></div>
+        <div class="modal-actions">
+          <button class="btn-cancel" id="modal-cancel">Cancelar</button>
+          <button class="btn-add-combo" id="modal-add">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════ PRINTABLE LETTERHEAD ══════════ -->
   <div id="print-doc"></div>
 
@@ -355,20 +397,33 @@
   try{ if(sessionStorage.getItem(AKEY)==='1') unlock(); else $('#pin').focus(); }catch(e){ $('#pin').focus(); }
 
   /* ═══════════ CATÁLOGO ═══════════ */
+  const COMBOS = (typeof COTIZADOR_COMBOS !== 'undefined') ? COTIZADOR_COMBOS : [];
+  function catAll(){
+    const items = COTIZADOR_MENU.map(i=>({ name:i.name, cat:i.cat, price:i.price, kind:'item' }));
+    const combos = COMBOS.map(c=>({
+      name:c.label, cat:c.cat, price:(c.from||0), kind:'combo', combo:c,
+      search:(c.label + ' ' + c.groups.map(g=>g.options.map(o=>o.n).join(' ')).join(' ')).toLowerCase()
+    }));
+    return items.concat(combos);
+  }
   function buildCatalog(){
-    const cats = [...new Set(COTIZADOR_MENU.map(i=>i.cat))];
+    const all = catAll();
+    const cats = [...new Set(all.map(i=>i.cat))];
     const sel = $('#cat-filter');
     cats.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
-    $('#count-tag').textContent = COTIZADOR_MENU.length + ' productos';
+    $('#count-tag').textContent = (COTIZADOR_MENU.length + COMBOS.length) + ' productos';
     renderCatalog();
   }
   function renderCatalog(){
     const q = ($('#search').value||'').toLowerCase().trim();
     const cf = $('#cat-filter').value;
     const list = $('#cat-list'); list.innerHTML='';
-    let items = COTIZADOR_MENU.filter(i=>{
+    let items = catAll().filter(i=>{
       if(cf && i.cat!==cf) return false;
-      if(q && !(i.name.toLowerCase().includes(q) || i.cat.toLowerCase().includes(q))) return false;
+      if(q){
+        const hay = (i.name + ' ' + i.cat + ' ' + (i.search||'')).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
       return true;
     });
     if(!items.length){ list.innerHTML='<div class="empty">Sin resultados.</div>'; return; }
@@ -378,16 +433,83 @@
       const gt=document.createElement('div'); gt.className='cat-group-title'; gt.textContent=cat; list.appendChild(gt);
       groups[cat].forEach(i=>{
         const row=document.createElement('div'); row.className='menu-item';
-        row.innerHTML = `<span class="mi-name">${esc(i.name)}</span><span class="mi-price">${money(i.price)}</span>`;
-        const b=document.createElement('button'); b.className='mi-add'; b.type='button'; b.textContent='+';
-        b.title='Agregar a la cotización';
-        b.addEventListener('click', ()=> addLine(i.name, i.price, false));
+        const b=document.createElement('button'); b.className='mi-add'; b.type='button';
+        if(i.kind==='combo'){
+          row.classList.add('is-combo');
+          row.innerHTML = `<span class="mi-name">${esc(i.name)} <span class="combo-badge">armar</span></span><span class="mi-price">desde ${money(i.price)}</span>`;
+          b.textContent='⚙'; b.title='Configurar';
+          b.addEventListener('click', ()=> openCombo(i.combo));
+        } else {
+          row.innerHTML = `<span class="mi-name">${esc(i.name)}</span><span class="mi-price">${money(i.price)}</span>`;
+          b.textContent='+'; b.title='Agregar a la cotización';
+          b.addEventListener('click', ()=> addLine(i.name, i.price, false));
+        }
         row.appendChild(b); list.appendChild(row);
       });
     });
   }
   $('#search').addEventListener('input', renderCatalog);
   $('#cat-filter').addEventListener('change', renderCatalog);
+
+  /* ═══════════ CONFIGURADOR (COMBOS) ═══════════ */
+  let curCombo=null, curSel={}, curQty=1;
+  function comboName(c, sel){
+    const g = k => sel[k] || {n:''};
+    switch(c.id){
+      case 'pasta':{ let s=`Pasta ${g('tipo').n} ${g('salsa').n}`; if(sel.proteina && !sel.proteina.none) s+=` con ${sel.proteina.n.toLowerCase()}`; return s; }
+      case 'latte':   return `Latte / Capuccino ${g('sabor').n} (${g('tamano').n})`;
+      case 'frappe':  return `Frappé ${g('sabor').n}`;
+      case 'smoothie':return `Smoothie ${g('sabor').n} (base ${g('base').n.toLowerCase()})`;
+      case 'waffle':  return `${g('forma').n} ${g('variante').n}`;
+      case 'agua':    return `Agua fresca de ${g('sabor').n} (${g('tipo').n.toLowerCase()})`;
+      default:        return c.label;
+    }
+  }
+  function comboPrice(c, sel){ return c.groups.reduce((s,g)=> s + (sel[g.key] ? (Number(sel[g.key].p)||0) : 0), 0); }
+  function openCombo(c){
+    curCombo=c; curSel={}; curQty=1;
+    c.groups.forEach(g=> curSel[g.key]=g.options[0]);
+    $('#modal-title').textContent = c.label.replace(/\s*\(.*\)\s*$/,'');
+    const body=$('#modal-body'); body.innerHTML='';
+    c.groups.forEach(g=>{
+      const wrap=document.createElement('div'); wrap.className='field';
+      const lab=document.createElement('label'); lab.textContent=g.label; wrap.appendChild(lab);
+      const selEl=document.createElement('select'); selEl.dataset.key=g.key;
+      g.options.forEach((o,idx)=>{
+        const op=document.createElement('option'); op.value=idx;
+        op.textContent = o.p>0 ? `${o.n}  (${money(o.p)})` : o.n;
+        selEl.appendChild(op);
+      });
+      selEl.addEventListener('change', e=>{ curSel[g.key]=g.options[+e.target.value]; refreshCombo(); });
+      wrap.appendChild(selEl); body.appendChild(wrap);
+    });
+    const qwrap=document.createElement('div'); qwrap.className='field';
+    qwrap.innerHTML='<label>Cantidad</label>';
+    const qin=document.createElement('input'); qin.type='number'; qin.min='1'; qin.step='1'; qin.value='1';
+    qin.addEventListener('input', e=>{ curQty=Math.max(1, parseInt(e.target.value||1,10)); refreshCombo(); });
+    qwrap.appendChild(qin); body.appendChild(qwrap);
+    refreshCombo();
+    $('#modal').classList.add('open');
+  }
+  function refreshCombo(){
+    const unit=comboPrice(curCombo,curSel);
+    $('#modal-preview').textContent = comboName(curCombo,curSel);
+    $('#modal-price').textContent = money(unit*curQty) + (curQty>1 ? `  (${money(unit)} c/u)` : '');
+  }
+  function closeCombo(){ $('#modal').classList.remove('open'); curCombo=null; }
+  function confirmCombo(){
+    if(!curCombo) return;
+    const name=comboName(curCombo,curSel), unit=comboPrice(curCombo,curSel);
+    const existing = state.lines.find(l=>!l.editable && l.name===name && Number(l.price)===Number(unit));
+    if(existing) existing.qty += curQty;
+    else state.lines.push({ name, qty:curQty, price:unit, editable:false });
+    saveDraft(); renderLines(); toast('+ '+name); closeCombo();
+  }
+  $('#modal-add').addEventListener('click', confirmCombo);
+  $('#modal-cancel').addEventListener('click', closeCombo);
+  $('#modal-x').addEventListener('click', closeCombo);
+  $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeCombo(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeCombo(); });
 
   /* ═══════════ LÍNEAS ═══════════ */
   function addLine(name, price, editable){
