@@ -265,6 +265,15 @@ function injectAddButtons() {
       e.stopPropagation();
       // Tisana type picker
       if (categoria === 'Tisana') { showTisanaPicker(rawName); return; }
+      if (categoria === 'Chilaquiles') {
+        showGenericPicker({
+          title: rawName,
+          sub: '¿Qué salsa?',
+          options: [ { label: 'Rojos' }, { label: 'Verdes' }, { label: 'Suizos' } ],
+          onSelect: (salsa) => addItem(fullName + ' · ' + salsa),
+        });
+        return;
+      }
       addItem(fullName);
       btn.classList.add('added');
       setTimeout(() => btn.classList.remove('added'), 400);
