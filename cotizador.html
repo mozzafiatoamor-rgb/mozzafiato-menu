@@ -253,6 +253,17 @@
     .sheet .notes .b{font-family:var(--display); color:var(--gold-dark); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; display:block; margin-bottom:4px}
     .sheet .foot{margin-top:34px; border-top:1px solid #e4dcc8; padding-top:12px; text-align:center; font-size:.72rem; color:#8a7b57; font-style:italic}
     .sheet .foot .thanks{font-family:var(--script); font-size:1.5rem; color:var(--gold-dark); font-style:normal; display:block; margin-bottom:4px}
+    /* 2ª hoja — Términos y Condiciones */
+    .sheet .page2{ page-break-before:always; break-before:page; padding-top:4mm; }
+    .sheet .page2 .lh2{ text-align:center; border-bottom:2px solid var(--gold-light); padding-bottom:12px; margin-bottom:18px; }
+    .sheet .page2 .lh2-logo{ width:auto; max-width:190px; max-height:82px; display:block; margin:0 auto 6px; }
+    .sheet .page2 .p2-title{ font-family:var(--display); color:var(--gold-dark); font-size:1.45rem; letter-spacing:.02em; }
+    .sheet .page2 .p2-sub{ font-size:.78rem; color:#6b5d3f; margin-top:2px; }
+    .sheet .page2 ol.terms{ margin:0; padding-left:22px; }
+    .sheet .page2 ol.terms li{ font-size:.86rem; color:#3a3020; line-height:1.5; margin-bottom:9px; padding-left:4px; page-break-inside:avoid; }
+    .sheet .page2 .p2-sign{ width:280px; margin:44px auto 0; text-align:center; font-size:.76rem; color:#6b5d3f; }
+    .sheet .page2 .p2-sign .line{ border-top:1px solid #6b5d3f; margin-bottom:6px; height:34px; }
+    .sheet .page2 .p2-foot{ margin-top:28px; text-align:center; font-size:.72rem; color:#8a7b57; font-style:italic; }
   </style>
 </head>
 <body>
@@ -346,6 +357,14 @@
             <textarea id="c-notas" placeholder="Ej. Incluye montaje y servicio. Anticipo 50%. Precios sujetos a cambio sin previo aviso. Sabores de bebidas a elegir…"></textarea>
           </div>
 
+          <div class="field" style="margin-top:6px">
+            <label class="iva-toggle" style="margin:0">
+              <input type="checkbox" id="terms-toggle" style="width:auto">
+              <span>Incluir 2ª hoja: Términos y Condiciones</span>
+            </label>
+            <button type="button" class="add-service" id="edit-terms" style="margin-top:8px">✎ Editar términos y condiciones</button>
+          </div>
+
           <div class="actions">
             <button class="btn-save" id="btn-save">💾 Guardar cotización</button>
             <button class="btn-print" id="btn-pdf">📄 Descargar PDF</button>
@@ -371,6 +390,23 @@
         <div class="modal-actions">
           <button class="btn-cancel" id="modal-cancel">Cancelar</button>
           <button class="btn-add-combo" id="modal-add">Agregar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MODAL TÉRMINOS Y CONDICIONES ══════════ -->
+  <div class="modal-overlay" id="terms-modal">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Términos y Condiciones</h3><button class="modal-x" id="terms-x" title="Cerrar">✕</button></div>
+      <div class="modal-body">
+        <p style="font-size:.82rem;color:var(--text-soft);margin:0 0 8px">Un punto por línea. Aparecen como lista numerada en la 2ª hoja del PDF. Se guardan y se aplican a todas tus cotizaciones.</p>
+        <textarea id="terms-text" style="width:100%;min-height:230px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font-size:.85rem;line-height:1.5;outline:none"></textarea>
+      </div>
+      <div class="modal-foot">
+        <div class="modal-actions">
+          <button class="btn-cancel" id="terms-reset">Restaurar por defecto</button>
+          <button class="btn-add-combo" id="terms-save">Guardar</button>
         </div>
       </div>
     </div>
@@ -465,7 +501,7 @@
   document.querySelector('header img').src = LOGO;
 
   /* ═══════════ ESTADO ═══════════ */
-  let state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, folio:'', lines:[] };
+  let state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, terms:true, folio:'', lines:[] };
 
   function loadDraft(){
     try{ const d = JSON.parse(localStorage.getItem(SKEY)); if(d) state = Object.assign(state,d); }catch(e){}
@@ -719,6 +755,7 @@
       el.addEventListener('input', ()=>{ state[key]=el.value; saveDraft(); });
     });
     $('#iva-toggle').checked = !!state.iva;
+    $('#terms-toggle').checked = (state.terms!==false);
     $('#folio-tag').textContent = state.folio || '';
   }
 
@@ -734,6 +771,31 @@
     catch(e){ return d; }
   }
   function hoyLargo(){ return new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'}); }
+
+  /* ═══════════ TÉRMINOS Y CONDICIONES (2ª hoja) ═══════════ */
+  const TKEY = "mozza_cotizador_terminos";
+  const DEFAULT_TERMS = [
+    "Vigencia: esta cotización es válida por 15 días a partir de su fecha de emisión.",
+    "Para apartar la fecha se requiere un anticipo del 50%. El saldo se liquida el día del evento o entrega.",
+    "Los precios están en pesos mexicanos (MXN). El IVA se aplica únicamente si se indica en la cotización.",
+    "El total puede variar según cambios en el menú, número de personas o servicios solicitados.",
+    "Cambios o ajustes deben solicitarse con al menos 72 horas de anticipación.",
+    "Cancelaciones: el anticipo no es reembolsable; puede reagendarse una sola vez avisando con 7 días.",
+    "Mobiliario, montaje, personal y traslados se cotizan por separado, salvo que se indique lo contrario.",
+    "El evento o pedido se confirma únicamente al recibir el anticipo."
+  ].join("\n");
+  function getTerms(){ try{ const t=localStorage.getItem(TKEY); return (t===null)?DEFAULT_TERMS:t; }catch(e){ return DEFAULT_TERMS; } }
+  function setTerms(t){ try{ localStorage.setItem(TKEY, t); }catch(e){} }
+  function termsLines(){ return getTerms().split('\n').map(l=>l.trim()).filter(Boolean); }
+
+  function openTerms(){ $('#terms-text').value = getTerms(); $('#terms-modal').classList.add('open'); }
+  function closeTerms(){ $('#terms-modal').classList.remove('open'); }
+  $('#edit-terms').addEventListener('click', openTerms);
+  $('#terms-x').addEventListener('click', closeTerms);
+  $('#terms-save').addEventListener('click', ()=>{ setTerms($('#terms-text').value); toast('Términos guardados'); closeTerms(); });
+  $('#terms-reset').addEventListener('click', ()=>{ $('#terms-text').value = DEFAULT_TERMS; });
+  $('#terms-modal').addEventListener('click', e=>{ if(e.target.id==='terms-modal') closeTerms(); });
+  $('#terms-toggle').addEventListener('change', e=>{ state.terms = e.target.checked; saveDraft(); });
 
   function buildSheet(){
     const t = totals();
@@ -767,6 +829,17 @@
         ${esc(BIZ.name)} — ${esc(BIZ.tagline)} · ${esc(BIZ.phone)}<br>
         Cotización válida por 15 días. Precios en pesos mexicanos (MXN).
       </div>
+      ${ (state.terms!==false && termsLines().length) ? `
+      <div class="page2">
+        <div class="lh2">
+          <img class="lh2-logo" src="${LOGO_SEPIA}" alt="Mozzafiato">
+          <div class="p2-title">Términos y Condiciones</div>
+          <div class="p2-sub">Cotización ${esc(state.folio||'')}${state.cliente?' · '+esc(state.cliente):''}</div>
+        </div>
+        <ol class="terms">${ termsLines().map(l=>`<li>${esc(l)}</li>`).join('') }</ol>
+        <div class="p2-sign"><div class="line"></div>Nombre y firma de conformidad</div>
+        <div class="p2-foot">${esc(BIZ.name)} — ${esc(BIZ.tagline)} · ${esc(BIZ.phone)}</div>
+      </div>` : '' }
     </div>`;
   }
 
@@ -796,7 +869,7 @@
       image:{ type:'jpeg', quality:0.98 },
       html2canvas:{ scale:2, useCORS:true, backgroundColor:'#ffffff', scrollX:0, scrollY:0 },
       jsPDF:{ unit:'mm', format:'letter', orientation:'portrait' },
-      pagebreak:{ mode:['css','legacy'] }
+      pagebreak:{ mode:['css','legacy'], before:'.page2' }
     }).from(sheet).save().then(()=>{ holder.remove(); toast('PDF descargado'); })
       .catch(()=>{ holder.remove(); toast('No se pudo generar el PDF'); });
   });
@@ -811,11 +884,16 @@
     s += `\n`;
     state.lines.filter(l=>l.name||l.price).forEach(l=>{
       s += `• ${l.qty} × ${l.name||'—'}  —  ${money(l.qty*l.price)}\n`;
+      if(l.desc) s += `   ${l.desc}\n`;
     });
     s += `\nSubtotal: ${money(t.sub)}\n`;
     if(state.iva) s += `IVA 16%: ${money(t.iva)}\n`;
     s += `*Total: ${money(t.total)}*\n`;
     if(state.notas) s += `\n${state.notas}\n`;
+    if(state.terms!==false && termsLines().length){
+      s += `\n*Términos y Condiciones:*\n`;
+      termsLines().forEach((l,i)=>{ s += `${i+1}. ${l}\n`; });
+    }
     s += `\n${BIZ.address}\nTel. ${BIZ.phone}`;
     return s;
   }
@@ -841,7 +919,7 @@
     if(!confirm('¿Iniciar una cotización nueva? Se limpiarán los datos actuales.')) return;
     // consume current folio (it was used or discarded) and assign a fresh committed one
     const fresh = nextFolio(true);
-    state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, folio:fresh, lines:[] };
+    state = { cliente:'', empresa:'', fecha:'', contacto:'', notas:'', iva:false, terms:true, folio:fresh, lines:[] };
     saveDraft(); bindFields(); renderLines(); recalc();
     toast('Nueva cotización ' + fresh);
   });
@@ -894,7 +972,7 @@
 
   function loadSaved(id){
     const e = getSaved().find(x=>x.id===id); if(!e) return;
-    state = Object.assign({ cliente:'',empresa:'',fecha:'',contacto:'',notas:'',iva:false,folio:'',lines:[] }, JSON.parse(JSON.stringify(e.state)));
+    state = Object.assign({ cliente:'',empresa:'',fecha:'',contacto:'',notas:'',iva:false,terms:true,folio:'',lines:[] }, JSON.parse(JSON.stringify(e.state)));
     state.id = id;
     saveDraft(); bindFields(); renderLines(); recalc(); closeSavedList();
     toast('Abierta ' + (state.folio||''));
