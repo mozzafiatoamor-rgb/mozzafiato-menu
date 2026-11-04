@@ -217,6 +217,29 @@
     .btn-add-combo{background:var(--gold-dark); color:var(--footer-text)}
     .btn-add-combo:hover{background:var(--gold)}
 
+    /* ── MÓVIL (va al final para ganar a las reglas base) ── */
+    @media (max-width:760px){
+      body{ overflow-x:hidden; }
+      .wrap{ padding:12px; gap:14px; }
+      header{ padding:10px 12px; gap:8px; }
+      header img{ height:32px; }
+      header .titles .t{ font-size:1.3rem; }
+      header .titles .s{ font-size:.56rem; letter-spacing:.14em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      header .hdr-saved, header .logout{ padding:7px 9px; font-size:.72rem; margin-right:0; }
+      .card > .card-head{ padding:12px 14px; }
+      .card > .card-body{ padding:14px 14px; }
+      .catalog{ position:static !important; top:auto !important; }
+      .cat-list{ max-height:50vh; }
+      .cat-group-title{ position:sticky; top:0; background:var(--white); z-index:1; margin-top:0; padding-top:8px; }
+      .lines th, .lines td{ padding:6px 3px; }
+      .lines input.qty{ width:42px; padding:6px 4px; }
+      .lines input.price{ width:58px; padding:6px 5px; }
+      .lines .l-sub{ font-size:.8rem; }
+      .lines .l-del{ font-size:1rem; padding:2px 4px; }
+      .actions{ grid-template-columns:1fr; }
+      .btn-wa, .btn-copy{ grid-column:1 / -1; }
+    }
+
     /* ── PRINT / LETTERHEAD DOCUMENT ── */
     #print-doc{display:none}
     @media print{
