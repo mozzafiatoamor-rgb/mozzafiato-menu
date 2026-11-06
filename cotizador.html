@@ -182,6 +182,22 @@
     .saved-row .sv-btns .del{color:var(--danger)}
     .saved-row .sv-btns .del:hover{background:var(--danger); color:#fff}
     .saved-empty{color:var(--text-soft); font-style:italic; text-align:center; padding:24px}
+    .saved-row .sv-check{flex:none; display:flex; align-items:center}
+    .saved-row .sv-check input{width:18px; height:18px}
+    .saved-row.sel{background:var(--bg2); border-radius:8px}
+    .sel-bar{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 18px 0}
+    .sel-bar .sb-count{font-size:.84rem; color:var(--gold-dark); font-family:var(--display)}
+    .sel-bar .sb-actions{display:flex; gap:8px}
+    .sel-bar button{border:none; border-radius:9px; padding:8px 12px; font-size:.8rem; background:var(--gold-dark); color:var(--footer-text)}
+    .sel-bar button:disabled{opacity:.45}
+    .sel-bar button.sec{background:var(--bg); color:var(--gold-dark); border:1px solid var(--line)}
+    .mv-items{max-height:46vh; overflow:auto; margin-top:4px; border:1px solid var(--line); border-radius:10px; padding:4px}
+    .mv-item{display:flex; align-items:center; gap:10px; padding:8px 8px; border-bottom:1px dashed var(--line); cursor:pointer}
+    .mv-item:last-child{border-bottom:none}
+    .mv-item input{width:18px; height:18px; flex:none}
+    .mv-item .mv-nm{flex:1; font-size:.88rem; line-height:1.3}
+    .mv-item .mv-nm .mv-d{display:block; font-size:.74rem; color:var(--text-soft); font-style:italic; margin-top:2px}
+    .mv-item .mv-q{font-family:var(--display); color:var(--gold-dark); font-size:.82rem; white-space:nowrap}
 
     .toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
       background:var(--gold-dark); color:#fff; padding:12px 22px; border-radius:30px; font-size:.9rem;
@@ -482,12 +498,44 @@
     <div class="modal-card">
       <div class="modal-head"><h3>Cotizaciones guardadas</h3><button class="modal-x" id="saved-x" title="Cerrar">✕</button></div>
       <div class="saved-tools">
+        <button id="mover-btn" class="sec">🔀 Mover artículos</button>
         <button id="imp-btn" class="sec">⬆️ Importar archivo</button>
         <button id="paste-btn" class="sec">📋 Pegar texto</button>
         <button id="exp-all-btn">⬇️ Exportar todas</button>
       </div>
       <input type="file" id="imp-file" accept=".json,application/json,text/json,text/plain" hidden>
+      <div class="sel-bar" id="sel-bar" hidden>
+        <span class="sb-count" id="sel-count">0 seleccionadas</span>
+        <div class="sb-actions">
+          <button id="sel-combine">Combinar en una</button>
+          <button id="sel-clear" class="sec">Limpiar</button>
+        </div>
+      </div>
       <div class="modal-body" id="saved-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ MODAL MOVER ARTÍCULOS ══════════ -->
+  <div class="modal-overlay" id="mover-modal">
+    <div class="modal-card">
+      <div class="modal-head"><h3>Mover artículos</h3><button class="modal-x" id="mover-x" title="Cerrar">✕</button></div>
+      <div class="modal-body">
+        <div class="fld-row">
+          <div class="field"><label>Origen</label><select id="mv-src"></select></div>
+          <div class="field"><label>Destino</label><select id="mv-dst"></select></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin:2px 0 6px">
+          <label style="font-size:.8rem; color:var(--text-soft)"><input type="checkbox" id="mv-all" style="width:auto"> Seleccionar todos</label>
+          <span id="mv-hint" style="font-size:.76rem; color:var(--text-soft)"></span>
+        </div>
+        <div id="mv-items" class="mv-items"></div>
+      </div>
+      <div class="modal-foot">
+        <div class="modal-actions">
+          <button class="btn-cancel" id="mv-copy">Copiar →</button>
+          <button class="btn-add-combo" id="mv-move">Mover →</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -986,25 +1034,37 @@
     try{ return new Date(ts).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
     catch(e){ return ''; }
   }
+  let selSaved = new Set();
+  function updateSelBar(){
+    const n = selSaved.size;
+    const bar = $('#sel-bar');
+    if(bar){ bar.hidden = (n===0); $('#sel-count').textContent = n + (n===1?' seleccionada':' seleccionadas'); $('#sel-combine').disabled = (n<2); }
+  }
   function openSavedList(){
     const arr = getSaved().slice().sort((a,b)=> b.savedAt - a.savedAt);
+    selSaved = new Set([...selSaved].filter(id=>arr.some(e=>e.id===id)));
     const box = $('#saved-list'); box.innerHTML='';
+    updateSelBar();
     if(!arr.length){ box.innerHTML='<div class="saved-empty">Aún no has guardado cotizaciones.<br>Usa “Guardar cotización”.</div>'; }
     arr.forEach(e=>{
-      const row=document.createElement('div'); row.className='saved-row';
+      const row=document.createElement('div'); row.className='saved-row'; if(selSaved.has(e.id)) row.classList.add('sel');
       row.innerHTML = `<div class="sv-info">
           <div class="sv-folio">${esc(e.folio||'')}${e.id===state.id?' · <span style="color:var(--gold)">abierta</span>':''}</div>
           <div class="sv-name">${esc(e.cliente||'Sin nombre')}${e.empresa?' · '+esc(e.empresa):''}</div>
           <div class="sv-meta">Guardada: ${fmtSavedDate(e.savedAt)}</div>
         </div>
         <div class="sv-total">${money(e.total||0)}</div>`;
+      const chk=document.createElement('label'); chk.className='sv-check';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=selSaved.has(e.id); cb.title='Seleccionar';
+      cb.addEventListener('change',()=>{ if(cb.checked) selSaved.add(e.id); else selSaved.delete(e.id); row.classList.toggle('sel', cb.checked); updateSelBar(); });
+      chk.appendChild(cb);
       const btns=document.createElement('div'); btns.className='sv-btns';
       const bOpen=document.createElement('button'); bOpen.textContent='Abrir'; bOpen.addEventListener('click',()=>loadSaved(e.id));
       const bExp =document.createElement('button'); bExp.textContent='Exportar'; bExp.addEventListener('click',()=>exportOne(e.id));
       const bDup =document.createElement('button'); bDup.textContent='Duplicar'; bDup.addEventListener('click',()=>duplicateSaved(e.id));
       const bDel =document.createElement('button'); bDel.className='del'; bDel.textContent='Eliminar'; bDel.addEventListener('click',()=>deleteSaved(e.id));
       btns.appendChild(bOpen); btns.appendChild(bExp); btns.appendChild(bDup); btns.appendChild(bDel);
-      row.appendChild(btns); box.appendChild(row);
+      row.insertBefore(chk, row.firstChild); row.appendChild(btns); box.appendChild(row);
     });
     $('#saved-modal').classList.add('open');
   }
@@ -1037,7 +1097,105 @@
   $('#hdr-saved').addEventListener('click', openSavedList);
   $('#saved-x').addEventListener('click', closeSavedList);
   $('#saved-modal').addEventListener('click', e=>{ if(e.target.id==='saved-modal') closeSavedList(); });
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSavedList(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ closeSavedList(); closeMover(); } });
+
+  /* ═══════════ COMBINAR Y MOVER (guardadas) ═══════════ */
+  function computeTotal(lines, iva){
+    const sub = (lines||[]).reduce((s,l)=> s + (Number(l.qty)||0)*(Number(l.price)||0), 0);
+    return sub + (iva ? sub*IVA_RATE : 0);
+  }
+  function mergeInto(arr, line){
+    if(!line.editable){
+      const ex = arr.find(x=>!x.editable && x.name===line.name && Number(x.price)===Number(line.price) && (x.desc||'')===(line.desc||''));
+      if(ex){ ex.qty = (Number(ex.qty)||0) + (Number(line.qty)||0); return; }
+    }
+    arr.push(line);
+  }
+  function combineSaved(){
+    const all = getSaved();
+    const ordered = all.slice().sort((a,b)=> b.savedAt - a.savedAt).filter(e=> selSaved.has(e.id));
+    if(ordered.length < 2){ toast('Selecciona al menos 2 cotizaciones'); return; }
+    const base = ordered[0].state || {};
+    let merged = [];
+    ordered.forEach(e=> (e.state && e.state.lines || []).forEach(l=> mergeInto(merged, JSON.parse(JSON.stringify(l)))) );
+    const nid='q'+Date.now(); const nfolio=nextFolio(true);
+    const folios = ordered.map(e=>e.folio||'').filter(Boolean).join(', ');
+    const nst = {
+      cliente: base.cliente||'', empresa: base.empresa||'', fecha: base.fecha||'', contacto: base.contacto||'',
+      notas: (base.notas ? base.notas + '\n' : '') + 'Combinada de: ' + folios,
+      iva: !!base.iva, terms: (base.terms!==false), folio: nfolio, id: nid, lines: merged
+    };
+    const total = computeTotal(merged, nst.iva);
+    all.unshift({ id:nid, folio:nfolio, cliente:nst.cliente, empresa:nst.empresa, total, savedAt:Date.now(), state:nst });
+    setSaved(all); selSaved = new Set(); openSavedList();
+    toast('Combinada en ' + nfolio);
+  }
+  $('#sel-combine').addEventListener('click', combineSaved);
+  $('#sel-clear').addEventListener('click', ()=>{ selSaved = new Set(); openSavedList(); });
+
+  /* ── Mover artículos entre cotizaciones ── */
+  const DRAFT = '__draft__';
+  function moverOptions(){
+    const opts = [{ id:DRAFT, label:'Cotización abierta (actual)' }];
+    getSaved().slice().sort((a,b)=> b.savedAt - a.savedAt).forEach(e=> opts.push({ id:e.id, label:(e.folio||'(sin folio)') + ' · ' + (e.cliente||'Sin nombre') }));
+    return opts;
+  }
+  function getLinesFor(id){
+    if(id===DRAFT) return (state.lines||[]).map(l=>JSON.parse(JSON.stringify(l)));
+    const e = getSaved().find(x=>x.id===id);
+    return e ? (e.state.lines||[]).map(l=>JSON.parse(JSON.stringify(l))) : [];
+  }
+  function setLinesFor(id, lines){
+    if(id===DRAFT){ state.lines = lines; saveDraft(); renderLines(); recalc(); return; }
+    const arr = getSaved(); const e = arr.find(x=>x.id===id); if(!e) return;
+    e.state.lines = lines; e.total = computeTotal(lines, e.state.iva); e.savedAt = Date.now();
+    setSaved(arr);
+    if(state.id===id){ state.lines = JSON.parse(JSON.stringify(lines)); saveDraft(); renderLines(); recalc(); }
+  }
+  function openMover(preId){
+    closeSavedList();
+    const src=$('#mv-src'), dst=$('#mv-dst'); src.innerHTML=''; dst.innerHTML='';
+    const opts = moverOptions();
+    opts.forEach(o=>{ src.appendChild(new Option(o.label,o.id)); dst.appendChild(new Option(o.label,o.id)); });
+    src.value = (preId && opts.some(o=>o.id===preId)) ? preId : opts[0].id;
+    const firstOther = opts.find(o=>o.id!==src.value);
+    dst.value = firstOther ? firstOther.id : opts[0].id;
+    renderMoverItems();
+    $('#mover-modal').classList.add('open');
+  }
+  function closeMover(){ $('#mover-modal').classList.remove('open'); }
+  function renderMoverItems(){
+    const lines = getLinesFor($('#mv-src').value);
+    const box=$('#mv-items'); box.innerHTML=''; $('#mv-all').checked=false;
+    if(!lines.length){ box.innerHTML='<div class="saved-empty">Sin artículos en el origen.</div>'; $('#mv-hint').textContent=''; return; }
+    lines.forEach((l,idx)=>{
+      const r=document.createElement('label'); r.className='mv-item';
+      r.innerHTML = `<input type="checkbox" data-i="${idx}"><span class="mv-nm">${esc(l.name||'—')}${l.desc?`<span class="mv-d">${esc(l.desc)}</span>`:''}</span><span class="mv-q">${l.qty} × ${money(l.price)}</span>`;
+      box.appendChild(r);
+    });
+    $('#mv-hint').textContent = lines.length + ' artículo(s)';
+  }
+  function doMove(copy){
+    const srcId=$('#mv-src').value, dstId=$('#mv-dst').value;
+    if(srcId===dstId){ toast('Elige un destino distinto al origen'); return; }
+    const idxs = [...$('#mv-items').querySelectorAll('input:checked')].map(c=>+c.dataset.i);
+    if(!idxs.length){ toast('Selecciona al menos un artículo'); return; }
+    const srcLines = getLinesFor(srcId);
+    const moving = idxs.map(i=> JSON.parse(JSON.stringify(srcLines[i])));
+    let dstLines = getLinesFor(dstId);
+    moving.forEach(l=> mergeInto(dstLines, l));
+    setLinesFor(dstId, dstLines);
+    if(!copy){ setLinesFor(srcId, srcLines.filter((_,i)=> !idxs.includes(i))); }
+    renderMoverItems();
+    toast((copy?'Copiados ':'Movidos ') + moving.length + ' artículo(s)');
+  }
+  $('#mover-btn').addEventListener('click', ()=> openMover());
+  $('#mv-src').addEventListener('change', renderMoverItems);
+  $('#mv-all').addEventListener('change', e=>{ $('#mv-items').querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=e.target.checked); });
+  $('#mv-move').addEventListener('click', ()=> doMove(false));
+  $('#mv-copy').addEventListener('click', ()=> doMove(true));
+  $('#mover-x').addEventListener('click', closeMover);
+  $('#mover-modal').addEventListener('click', e=>{ if(e.target.id==='mover-modal') closeMover(); });
 
   /* ── Exportar / Importar por archivo (portabilidad entre dispositivos) ── */
   function download(filename, text){
