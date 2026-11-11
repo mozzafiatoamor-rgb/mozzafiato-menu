@@ -242,8 +242,11 @@
 
     function renderResults(q) {
       if (!q || typeof MENU_DATA === 'undefined') { results.style.display='none'; return; }
+      const __I18N = (typeof window!=='undefined' && window.MOZZA_I18N_EN) ? window.MOZZA_I18N_EN : null;
+      const __EN = (function(){ try{ return localStorage.getItem('mozzafiato_lang')==='en'; }catch(e){ return false; } })();
+      const __tr = s => (__I18N && Object.prototype.hasOwnProperty.call(__I18N, s)) ? __I18N[s] : s;
       const matches = MENU_DATA.filter(i =>
-        [i.name, i.cat].some(s => normalize(s).includes(normalize(q)))
+        [i.name, i.cat, __tr(i.name), __tr(i.cat)].some(s => normalize(s).includes(normalize(q)))
       ).slice(0, 5);
       if (!matches.length) { results.style.display='none'; return; }
 
@@ -255,8 +258,8 @@
         row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-bottom:1px solid rgba(139,122,82,.1);cursor:pointer;transition:background .15s;gap:12px';
         row.innerHTML = `
           <div style="display:flex;flex-direction:column;flex:1;min-width:0">
-            <span style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.9rem;color:var(--gold-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(item.name, q)}</span>
-            <span style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px">${item.cat}</span>
+            <span style="font-family:'Playfair Display',Georgia,serif;font-style:italic;font-size:.9rem;color:var(--gold-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${highlight(__EN ? __tr(item.name) : item.name, q)}</span>
+            <span style="font-family:'Baskerville','Baskerville Old Face',Georgia,serif;font-size:.74rem;color:var(--gold);font-style:italic;margin-top:1px">${__EN ? __tr(item.cat) : item.cat}</span>
           </div>
           <button style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--gold);background:transparent;color:var(--gold-dark);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .2s,color .2s">${isPicker ? '⚙' : '+'}</button>
         `;
