@@ -1192,26 +1192,32 @@ function renderBuscadorResults(query) {
   }
   if (hint) hint.style.display = 'none';
   if (typeof MENU_DATA === 'undefined') {
-    list.innerHTML = '<div class="buscador-hint">Cargando...</div>';
+    list.innerHTML = '<div class="buscador-hint">' + ((function(){try{return localStorage.getItem('mozzafiato_lang')==='en'}catch(e){return false}})() ? 'Loading...' : 'Cargando...') + '</div>';
     return;
   }
-  const q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'');
+  const __norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'');
+  const __I18N = (typeof window!=='undefined' && window.MOZZA_I18N_EN) ? window.MOZZA_I18N_EN : null;
+  const __EN = (function(){ try{ return localStorage.getItem('mozzafiato_lang')==='en'; }catch(e){ return false; } })();
+  const __tr = s => (__I18N && Object.prototype.hasOwnProperty.call(__I18N, s)) ? __I18N[s] : s;
+  const q = __norm(query);
   const results = MENU_DATA.filter(item =>
-    [item.name, item.cat].some(s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,'').includes(q))
+    [item.name, item.cat, __tr(item.name), __tr(item.cat)].some(s => __norm(s).includes(q))
   ).slice(0, 5);
   if (!results.length) {
-    list.innerHTML = '<div class="buscador-hint">Sin resultados</div>';
+    list.innerHTML = '<div class="buscador-hint">' + (__EN ? 'No results' : 'Sin resultados') + '</div>';
     return;
   }
   const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
   list.innerHTML = results.map(item => {
     const isPicker = item.type === 'picker';
-    const highlighted = item.name.replace(re, '<mark>$1</mark>');
+    const __nm = __EN ? __tr(item.name) : item.name;
+    const __ct = __EN ? __tr(item.cat) : item.cat;
+    const highlighted = __nm.replace(re, '<mark>$1</mark>');
     return `
       <div class="buscador-row" onclick="buscadorGoTo('${item.page}')">
         <div class="buscador-row-info">
           <span class="buscador-row-name">${highlighted}</span>
-          <span class="buscador-row-cat">${item.cat}</span>
+          <span class="buscador-row-cat">${__ct}</span>
         </div>
         <button class="buscador-add-btn" aria-label="Agregar" onclick="event.stopPropagation();buscadorAdd(${JSON.stringify(item).replace(/"/g,'&quot;')},this)">${isPicker ? '⚙' : '+'}</button>
       </div>`;
