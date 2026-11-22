@@ -157,8 +157,8 @@
       '</div>';
     if (ok) {
       h += '<div class="form">' +
-        '<label class="campo"><span>Nombre del ganador *</span><input id="g-nombre" autocomplete="off"></label>' +
-        '<label class="campo"><span>Teléfono del ganador *</span><input id="g-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos"></label>' +
+        '<label class="campo"><span>Nombre de quien canjea *</span><input id="g-nombre" autocomplete="off"></label>' +
+        '<label class="campo"><span>Teléfono de quien canjea *</span><input id="g-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos"></label>' +
         '<label class="campo"><span>Nota (opcional)</span><input id="g-nota" autocomplete="off" placeholder="Mesa, # de cuenta…"></label>' +
         '<button class="btn grande" id="canjear">Canjear cupón</button>' +
         '<div class="err" id="canje-err"></div>' +
@@ -178,7 +178,7 @@
     var c = actual.cupon, b = $('canjear');
     var nombre = $('g-nombre').value.trim(), tel = $('g-tel').value.trim(), nota = $('g-nota').value.trim();
     $('canje-err').textContent = '';
-    if (!nombre) { $('canje-err').textContent = 'Escribe el nombre del ganador.'; return; }
+    if (!nombre) { $('canje-err').textContent = 'Escribe el nombre de quien canjea.'; return; }
     if (tel.replace(/\D/g, '').length < 10) { $('canje-err').textContent = 'Escribe el teléfono a 10 dígitos.'; return; }
     if (!confirmando) { confirmando = true; b.textContent = 'Toca otra vez para confirmar'; b.style.background = 'var(--ok)'; b.style.borderColor = 'var(--ok)';
       setTimeout(function(){ if (confirmando && b.isConnected) { confirmando = false; b.textContent = 'Canjear cupón'; b.style.background = ''; b.style.borderColor = ''; } }, 5000);

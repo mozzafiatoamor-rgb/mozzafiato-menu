@@ -75,8 +75,8 @@
     VENCIDO: 'Este cupón está VENCIDO.',
     AUN_NO_VALIDO: 'Este cupón AÚN NO ES VÁLIDO (todavía no llega su fecha).',
     FECHAS_INVERTIDAS: 'La fecha "Válido desde" no puede ser después de "Válido hasta".',
-    FALTA_NOMBRE: 'Escribe el nombre del ganador.',
-    FALTA_TELEFONO: 'Escribe el teléfono del ganador.',
+    FALTA_NOMBRE: 'Escribe el nombre de quien canjea.',
+    FALTA_TELEFONO: 'Escribe el teléfono de quien canjea.',
     FALTA_INSTITUCION: 'Falta el nombre de la institución.',
     FALTA_TITULO_CUPON: 'Cada cupón necesita un nombre (ej. "Premio 1").',
     FALTA_MONTO: 'Un cupón de monto necesita la cantidad en pesos.',
@@ -195,13 +195,19 @@
       return (n > 1 ? n + ' × ' : '') + i.nombre;
     });
   }
-  // "Válido del 5 de diciembre al 31 de enero de 2027" (usa la fecha de la rifa si no tiene su propio inicio)
+  // "Válido del 5 de diciembre al 31 de enero de 2027" (usa la fecha del evento si no tiene su propio inicio)
   function vigenciaTexto(c) {
     var d = c.desde || c.valido_desde, v = c.vence;
     if (d && v) return 'Válido del ' + fecha(d).replace(/ de \d{4}$/, d.slice(0, 4) === String(v).slice(0, 4) ? '' : '$&') + ' al ' + fecha(v);
     if (d) return 'Válido a partir del ' + fecha(d);
     if (v) return 'Válido hasta el ' + fecha(v);
     return '';
+  }
+  // Cómo nombrar el motivo del donativo según lo escrito en "Evento"
+  // ej. 'su evento «Kermés navideña»'  ·  sin evento: 'su evento'
+  function eventoFrase(evento) {
+    var e = String(evento || '').trim();
+    return e ? 'su evento «' + e + '»' : 'su evento';
   }
   function estadoCupon(c) {
     if (c.estado === 'canjeado') return { clave: 'canjeado', texto: 'Canjeado' };
@@ -435,7 +441,7 @@
     textoError: textoError, dinero: dinero, fecha: fecha, fechaCorta: fechaCorta, fechaHora: fechaHora,
     hoyISO: hoyISO, esc: esc, telWa: telWa, waLink: waLink,
     urlInstitucion: urlInstitucion, urlCupon: urlCupon, urlCaja: urlCaja,
-    lineasCupon: lineasCupon, estadoCupon: estadoCupon, vigenciaTexto: vigenciaTexto, qrSvg: qrSvg,
+    lineasCupon: lineasCupon, estadoCupon: estadoCupon, vigenciaTexto: vigenciaTexto, eventoFrase: eventoFrase, qrSvg: qrSvg,
     imagenCupon: imagenCupon, descargarCupon: descargarCupon, compartirCupon: compartirCupon,
     toast: toast, copiar: copiar, pintarLogos: pintarLogos, promoReginaHtml: promoReginaHtml
   };

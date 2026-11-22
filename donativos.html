@@ -97,7 +97,7 @@
   <div class="card gate" id="gate" hidden>
     <img data-logo="#5e4f30" alt="Mozzafiato">
     <h2>Donativos</h2>
-    <p>Cupones para rifas de escuelas e instituciones</p>
+    <p>Cupones de regalo para escuelas e instituciones</p>
     <label class="campo"><span>Correo</span><input id="email" type="email" autocomplete="username"></label>
     <label class="campo"><span>Contraseña</span><input id="pass" type="password" autocomplete="current-password"></label>
     <button class="btn grande" id="entrar">Entrar</button>
@@ -220,7 +220,7 @@
     var h = '<div class="kpis">' +
       kpi(tot.s, 'Solicitudes') + kpi(tot.c, 'Cupones donados') + kpi(tot.cj, 'Canjeados') + kpi(DON.dinero(tot.v), 'Valor donado') +
     '</div>' +
-    '<div class="toolbar"><input id="filtro" placeholder="Buscar institución, evento, folio o ganador…" value="' + E(filtro) + '">' +
+    '<div class="toolbar"><input id="filtro" placeholder="Buscar institución, evento, folio o beneficiario…" value="' + E(filtro) + '">' +
     '<button class="btn" id="nueva">+ Nueva solicitud</button></div>';
     if (!lista.length) h += '<div class="card vacio">Aún no hay solicitudes. Cuando una escuela o institución te pida apoyo, regístrala aquí con <b>+ Nueva solicitud</b>.</div>';
     else if (!vis.length) h += '<div class="vacio">Nada coincide con la búsqueda.</div>';
@@ -259,10 +259,10 @@
   function mensajeInstitucion(s){
     var r = resumen(s);
     return 'Hola' + (s.contacto ? ' ' + s.contacto : '') + ' 👋\n' +
-      'Con mucho gusto Mozzafiato apoya ' + (s.evento ? 'su ' + s.evento : 'su evento') + ' ☕\n\n' +
-      'Aquí están los ' + r.total + ' cupón(es) de regalo para su rifa:\n' + DON.urlInstitucion(s.token) + '\n\n' +
-      'Desde ese enlace pueden enviarle a cada ganador su cupón por WhatsApp o imprimirlos. ' +
-      'El ganador lo presenta en caja y se canjea una sola vez, solo para consumir en el restaurante (no aplica para llevar). ' +
+      'Con mucho gusto Mozzafiato apoya ' + DON.eventoFrase(s.evento) + ' ☕\n\n' +
+      'Aquí están los ' + r.total + ' cupón(es) de regalo:\n' + DON.urlInstitucion(s.token) + '\n\n' +
+      'Desde ese enlace pueden enviarle a cada persona su cupón por WhatsApp o imprimirlos. ' +
+      'Quien lo recibe lo presenta en caja y se canjea una sola vez, solo para consumir en el restaurante (no aplica para llevar). ' +
       'Las condiciones completas vienen en cada cupón.\n¡Mucho éxito!';
   }
 
@@ -328,7 +328,7 @@
     p.querySelectorAll('[data-deshacer]').forEach(function(b){
       b.onclick = async function(){
         var f = b.getAttribute('data-deshacer');
-        if (!confirm('¿Deshacer el canje de ' + f + '? Volverá a estar vigente y se borra el ganador registrado.')) return;
+        if (!confirm('¿Deshacer el canje de ' + f + '? Volverá a estar vigente y se borra el beneficiario registrado.')) return;
         try { await llamar('don_deshacer_canje', { p_folio: f }); await recargar(); abrirDetalle(s.id); DON.toast('Canje deshecho'); }
         catch (e) { DON.toast(DON.textoError(e), true); }
       };
@@ -348,7 +348,7 @@
     return c;
   }
   // ── Vigencia: "Válido hasta" va, como mínimo, al día siguiente del "Válido desde"
-  //    (o de la fecha de la rifa si el cupón no tiene su propio inicio) ──
+  //    (o de la fecha del evento si el cupón no tiene su propio inicio) ──
   function sumarDias(iso, n){
     var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -405,7 +405,7 @@
         '<label class="campo"><span>Válido desde</span><input data-c="valido_desde" type="date" value="' + E(c.valido_desde) + '"></label>' +
         '<label class="campo"><span>Válido hasta</span><input data-c="vence" type="date" value="' + E(c.vence) + '"' + (minVence(c) ? ' min="' + minVence(c) + '"' : '') + '></label>' +
       '</div>' +
-      (c.valido_desde ? '' : '<div class="peq" style="margin:-6px 0 10px">Sin "Válido desde", cuenta la <b>fecha de la rifa</b>' + (ed.fecha_evento ? ' (' + E(DON.fechaCorta(ed.fecha_evento)) + ')' : '') + ': antes no se puede canjear.</div>');
+      (c.valido_desde ? '' : '<div class="peq" style="margin:-6px 0 10px">Sin "Válido desde", cuenta la <b>fecha del evento</b>' + (ed.fecha_evento ? ' (' + E(DON.fechaCorta(ed.fecha_evento)) + ')' : '') + ': antes no se puede canjear.</div>');
     if (c.tipo === 'monto') {
       h += '<label class="campo"><span>Monto de consumo (una sola visita)</span><input data-c="monto" type="number" inputmode="decimal" min="1" step="1" value="' + E(c.monto) + '" placeholder="500"></label>';
     } else {
@@ -429,15 +429,15 @@
     var cuerpo =
       '<div class="seccion"><h3>¿Quién lo pide?</h3><div class="grid2">' +
         campo('Institución *', 'institucion', 'text', 'Esc. Primaria Benito Juárez') +
-        campo('Evento', 'evento', 'text', 'Kermés navideña') +
+        campo('Evento (lo verá la institución)', 'evento', 'text', 'Kermés navideña, rifa, festival, graduación…') +
         campo('Contacto', 'contacto', 'text', 'Mtra. Ana López') +
         campo('Teléfono (WhatsApp)', 'telefono', 'tel', '983 123 4567') +
-        campo('Fecha de la rifa', 'fecha_evento', 'date') +
+        campo('Fecha del evento', 'fecha_evento', 'date') +
         campo('Motivo', 'motivo', 'text', 'Recaudar fondos para…') +
       '</div>' +
       '<label class="campo"><span>Notas internas</span><textarea data-f="notas">' + E(ed.notas || '') + '</textarea></label></div>' +
       '<div class="seccion"><h3>Cupones (' + ed.cupones.length + ')</h3>' +
-        '<div class="peq" style="margin-bottom:10px">Un cupón por cada premio de la rifa. Usa <b>+ Igual</b> para repetir el mismo premio.</div>' +
+        '<div class="peq" style="margin-bottom:10px">Un cupón por cada regalo. Usa <b>+ Igual</b> para repetir el mismo premio.</div>' +
         '<details class="card" style="padding:10px 14px;margin-bottom:12px"><summary class="peq" style="cursor:pointer">Condiciones que salen en <b>todos</b> los cupones</summary>' +
           DON.normasHtml(null) + '</details>' +
         '<div id="lista-cup">' + ed.cupones.map(htmlCupon).join('') + '</div>' +
@@ -599,7 +599,7 @@
   }
 
   // ── Armador de combos (pasta, latte, frappé…) ──
-  // Cada paso se puede fijar o dejar "a elección del ganador".
+  // Cada paso se puede fijar o dejar "a elección de quien lo recibe".
   // Valor: suma de lo elegido; en los pasos a elección se toma la opción más cara (valor máximo posible).
   function armarCombo(prod, sel){
     var c = prod.combo, partes = [], precio = 0, todoElegir = true;
@@ -614,7 +614,7 @@
         if (!o.none) partes.push(o.n);
       }
     });
-    var nombre = todoElegir ? prod.nombre + ' (a elegir por el ganador)' : prod.nombre + ': ' + partes.join(', ');
+    var nombre = todoElegir ? prod.nombre + ' (a elegir)' : prod.nombre + ': ' + partes.join(', ');
     return { nombre: nombre, precio: precio };
   }
   function abrirArmador(el, i, prod){
@@ -626,7 +626,7 @@
       c.groups.map(function(g, gi){
         var tieneNinguno = g.options.some(function(o){ return o.none; });
         return '<label class="campo"><span>' + E(g.label) + '</span><select data-g="' + gi + '">' +
-          '<option value="' + A_ELEGIR + '"' + (tieneNinguno ? '' : ' selected') + '>— A elección del ganador —</option>' +
+          '<option value="' + A_ELEGIR + '"' + (tieneNinguno ? '' : ' selected') + '>— A elección de quien lo recibe —</option>' +
           g.options.map(function(o, oi){
             return '<option value="' + oi + '"' + (tieneNinguno && o.none ? ' selected' : '') + '>' + E(o.n) + (o.p ? ' · ' + DON.dinero(o.p) : '') + '</option>';
           }).join('') + '</select></label>';
@@ -775,8 +775,8 @@
         (insts.length ? insts.map(function(k){ var x = porInst[k]; return '<tr><td>' + E(k) + '</td><td class="num">' + Object.keys(x.sol).length + '</td><td class="num">' + x.n + '</td><td class="num">' + DON.dinero(x.v) + '</td><td class="num">' + x.cj + ' (' + DON.dinero(x.vcj) + ')</td></tr>'; }).join('')
                       : '<tr><td colspan="5" class="peq">Sin donativos este año.</td></tr>') +
       '</table></div></div>' +
-      '<div class="seccion"><h3>Ganadores que canjearon · ' + A + '</h3><div class="card tabla"><table class="t">' +
-        '<tr><th>Fecha</th><th>Ganador</th><th>Teléfono</th><th>Folio</th><th>Institución</th><th class="num">Valor</th></tr>' +
+      '<div class="seccion"><h3>Beneficiarios que canjearon · ' + A + '</h3><div class="card tabla"><table class="t">' +
+        '<tr><th>Fecha</th><th>Beneficiario</th><th>Teléfono</th><th>Folio</th><th>Institución</th><th class="num">Valor</th></tr>' +
         (ganadores.length ? ganadores.map(function(x){
           return '<tr><td class="peq">' + E(DON.fechaHora(x.c.canjeado_en)) + '</td><td>' + E(x.c.ganador_nombre || '') + '</td>' +
             '<td>' + (x.c.ganador_tel ? '<a target="_blank" href="' + E(DON.waLink(x.c.ganador_tel, '')) + '">' + E(x.c.ganador_tel) + '</a>' : '') + '</td>' +
@@ -789,7 +789,7 @@
   }
 
   function exportarCSV(){
-    var filas = [['Folio','Institución','Evento','Fecha solicitud','Premio','Tipo','Incluye','Valor','Vence','Estado','Canjeado el','Ganador','Teléfono ganador','Notas canje']];
+    var filas = [['Folio','Institución','Evento','Fecha solicitud','Premio','Tipo','Incluye','Valor','Vence','Estado','Canjeado el','Beneficiario','Teléfono beneficiario','Notas canje']];
     cuponesPlano().forEach(function(x){
       var c = x.c, s = x.s;
       filas.push([c.folio, s.institucion, s.evento || '', String(s.creado).slice(0, 10), c.titulo, c.tipo,

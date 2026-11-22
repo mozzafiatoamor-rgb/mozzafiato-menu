@@ -70,7 +70,7 @@
     var est = DON.estadoCupon(c);
     var h = '<button class="btn chico" data-acc="img" data-folio="' + E(c.folio) + '">⬇︎ Imagen</button>';
     if (est.clave === 'activo') {
-      h += '<button class="btn chico wa" data-acc="ganador" data-folio="' + E(c.folio) + '">Enviar al ganador</button>' +
+      h += '<button class="btn chico wa" data-acc="ganador" data-folio="' + E(c.folio) + '">Enviar por WhatsApp</button>' +
            '<button class="btn chico sec" data-acc="link" data-folio="' + E(c.folio) + '">Copiar link</button>';
     }
     return h;
@@ -86,8 +86,9 @@
       '<div class="gracias">Con cariño para</div>' +
       '<div class="inst">' + E(datos.institucion) + '</div>' +
       (datos.evento ? '<p>' + E(datos.evento) + (datos.fecha_evento ? ' · ' + E(DON.fecha(datos.fecha_evento)) : '') + '</p>' : '') +
-      '<p class="ayuda">Estos son los premios que Mozzafiato dona para su rifa. A cada ganador envíale <b>su</b> cupón por WhatsApp ' +
-      'o imprímelos. El ganador lo presenta en caja y se canjea una sola vez, <b>solo para consumir en el restaurante</b> ' +
+      '<p class="ayuda">Estos son los regalos que Mozzafiato dona para ' + (datos.evento ? 'su evento <b>«' + E(datos.evento) + '»</b>' : 'su evento') + '. ' +
+      'A cada persona que reciba un regalo envíale <b>su</b> cupón por WhatsApp o imprímelos. ' +
+      'Quien lo recibe lo presenta en caja y se canjea una sola vez, <b>solo para consumir en el restaurante</b> ' +
       '(no aplica para llevar). Las condiciones completas vienen en cada cupón.</p>' +
       '<p class="resumen">' + cs.length + ' cupón' + (cs.length === 1 ? '' : 'es') + ' · ' + vig + ' vigente' + (vig === 1 ? '' : 's') + '</p>' +
       '<div class="acciones-top">' +
@@ -127,7 +128,8 @@
     var c = datos.cupon;
     $app.innerHTML = '<div class="hero" style="padding-bottom:0">' +
         '<div class="gracias">¡Felicidades!</div>' +
-        '<p>Ganaste este premio en la rifa de <b>' + E(datos.institucion) + '</b>' + (datos.evento ? ' (' + E(datos.evento) + ')' : '') + '.<br>' +
+        '<p>Recibiste este regalo de Mozzafiato con motivo de ' + (datos.evento ? '<b>«' + E(datos.evento) + '»</b> de ' : 'un evento de ') +
+          '<b>' + E(datos.institucion) + '</b>.<br>' +
         'Ven a disfrutarlo a Mozzafiato y muéstralo en caja para validarlo. Es para consumir en el restaurante (no aplica para llevar).</p></div>' +
       '<div class="uno">' + tarjeta(c) +
         '<div class="botones">' +
@@ -150,7 +152,8 @@
     } else if (acc === 'link') {
       DON.copiar(DON.urlCupon(c.token));
     } else if (acc === 'ganador') {
-      var texto = '¡Felicidades! 🎉 Ganaste un premio en la rifa de ' + datos.institucion + ', cortesía de Mozzafiato ☕\n' +
+      var texto = '¡Felicidades! 🎉 Recibiste un regalo de Mozzafiato ☕ con motivo de ' +
+        (datos.evento ? '«' + datos.evento + '» de ' : 'un evento de ') + datos.institucion + '\n' +
         DON.lineasCupon(c).join(', ') + '\nFolio: ' + c.folio +
         (DON.vigenciaTexto(c) ? '\n' + DON.vigenciaTexto(c) : '') +
         '\n\nTu cupón: ' + DON.urlCupon(c.token) +
