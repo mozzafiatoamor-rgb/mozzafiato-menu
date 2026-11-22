@@ -36,6 +36,33 @@
     return t && t !== CONDICIONES_VIEJAS ? t : '';
   }
 
+  // ── Publicidad de Casa Regina (sale en las páginas de cupones) ──
+  // Cambia aquí los textos o enlaces; con activo:false se oculta.
+  var PROMO_REGINA = {
+    activo: true,
+    titulo: '¿Vienes de fuera o tienes visitas?',
+    texto: 'Hospédate en Casa Regina Hotel Boutique y desayuna en Mozzafiato, nuestro restaurante asociado.',
+    foto: 'images/casa-regina-portada.jpg',
+    logo: 'images/casa-regina-logo.png',
+    botones: [
+      { texto: 'Reservar habitación', link: 'https://mozzafiatoamor-rgb.github.io/casa_regina_app/?reservar' },
+      { texto: 'Síguenos en Facebook', link: 'https://www.facebook.com/share/1HwxUyNepJ/' }
+    ]
+  };
+  function promoReginaHtml() {
+    var P = PROMO_REGINA;
+    if (!P.activo) return '';
+    return '<aside class="promo-regina">' +
+      '<div class="pr-foto" style="background-image:url(\'' + P.foto + '\')"><img src="' + P.logo + '" alt="Casa Regina Hotel Boutique"></div>' +
+      '<div class="pr-cuerpo">' +
+        '<div class="pr-titulo">' + esc(P.titulo) + '</div>' +
+        '<div class="pr-texto">' + esc(P.texto) + '</div>' +
+        '<div class="pr-botones">' + P.botones.map(function (b, i) {
+          return '<a class="pr-btn' + (i ? ' sec' : '') + '" href="' + esc(b.link) + '" target="_blank" rel="noopener">' + esc(b.texto) + '</a>';
+        }).join('') + '</div>' +
+      '</div></aside>';
+  }
+
   // ── Mensajes de error legibles ──
   var ERRORES = {
     NO_AUTORIZADO: 'Tu cuenta no tiene acceso a Donativos.',
@@ -410,6 +437,6 @@
     urlInstitucion: urlInstitucion, urlCupon: urlCupon, urlCaja: urlCaja,
     lineasCupon: lineasCupon, estadoCupon: estadoCupon, vigenciaTexto: vigenciaTexto, qrSvg: qrSvg,
     imagenCupon: imagenCupon, descargarCupon: descargarCupon, compartirCupon: compartirCupon,
-    toast: toast, copiar: copiar, pintarLogos: pintarLogos
+    toast: toast, copiar: copiar, pintarLogos: pintarLogos, promoReginaHtml: promoReginaHtml
   };
 })(window);

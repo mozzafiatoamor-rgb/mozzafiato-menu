@@ -86,3 +86,17 @@ a{color:var(--gold-dark)}
 
 .cargando{padding:60px 20px; text-align:center; color:var(--text-soft)}
 .vacio{padding:40px 20px; text-align:center; color:var(--text-soft)}
+
+/* ── Publicidad Casa Regina ── */
+.promo-regina{max-width:520px; margin:10px auto 34px; border-radius:16px; overflow:hidden; background:#0C1F2B; color:#EDE8DA;
+  box-shadow:0 16px 40px rgba(12,31,43,.35); border:1px solid rgba(201,168,76,.35)}
+.promo-regina .pr-foto{position:relative; height:190px; background-size:cover; background-position:center 40%}
+.promo-regina .pr-foto:after{content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(12,31,43,.05) 30%,rgba(12,31,43,.92) 100%)}
+.promo-regina .pr-foto img{position:absolute; left:50%; bottom:12px; transform:translateX(-50%); width:220px; max-width:70%; z-index:1}
+.promo-regina .pr-cuerpo{padding:14px 20px 20px; text-align:center}
+.promo-regina .pr-titulo{font-family:var(--display); font-size:1.2rem; font-weight:700; color:#C9A84C; margin-bottom:6px}
+.promo-regina .pr-texto{font-size:.88rem; line-height:1.55; color:rgba(237,232,218,.85); margin-bottom:14px}
+.promo-regina .pr-botones{display:flex; flex-direction:column; gap:8px}
+.promo-regina .pr-btn{display:block; padding:11px 16px; border-radius:999px; background:#C9A84C; color:#0C1F2B; font-weight:700; text-decoration:none; font-size:.92rem}
+.promo-regina .pr-btn.sec{background:transparent; color:#C9A84C; border:1px solid rgba(201,168,76,.5)}
+@media print{ .promo-regina{display:none !important} }

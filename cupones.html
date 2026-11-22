@@ -109,6 +109,7 @@
         return '<div class="item">' + tarjeta(c) + '<div class="botones">' + botones(c) + '</div></div>';
       }).join('') + '</div>';
     });
+    h += '<div class="no-print" style="padding:0 16px">' + DON.promoReginaHtml() + '</div>';
     $app.innerHTML = h;
     DON.pintarLogos();
     document.getElementById('imprimir').onclick = function(){ window.print(); };
@@ -132,7 +133,8 @@
         '<div class="botones">' +
           '<button class="btn chico" data-acc="img" data-folio="' + E(c.folio) + '">⬇︎ Guardar imagen</button>' +
           '<a class="btn chico sec" href="index.html">Ver el menú</a>' +
-        '</div></div>';
+        '</div></div>' +
+      '<div style="padding:0 16px">' + DON.promoReginaHtml() + '</div>';
     DON.pintarLogos();
   }
 
