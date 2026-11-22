@@ -339,19 +339,31 @@
 
   function cuponVacio(n, plantilla){
     var base = plantilla || {};
-    return { tipo: base.tipo || 'producto', titulo: 'Premio ' + n,
+    var c = { tipo: base.tipo || 'producto', titulo: 'Premio ' + n,
              items: (base.items || []).map(function(i){ return { nombre: i.nombre, cant: i.cant, precio: i.precio }; }),
              monto: base.monto || '', condiciones: base.condiciones != null ? base.condiciones : DON.CONDICIONES_DEFAULT,
-             vence: base.vence || (ed && ed.venceDefault) || '', valido_desde: base.valido_desde || '' };
+             vence: base.vence || '', valido_desde: base.valido_desde || '', _auto: !base.vence || base._auto };
+    ajustarVence(c);
+    return c;
   }
-  function venceSugerido(){ // 3 meses
-    var d = new Date(DON.hoyISO() + 'T12:00:00'); d.setMonth(d.getMonth() + 3);
-    return d.toISOString().slice(0, 10);
+  // ── Vigencia: "Válido hasta" va, como mínimo, al día siguiente del "Válido desde"
+  //    (o de la fecha de la rifa si el cupón no tiene su propio inicio) ──
+  function sumarDias(iso, n){
+    var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function desdeEf(c){ return c.valido_desde || (ed && ed.fecha_evento) || ''; }
+  function minVence(c){ var d = desdeEf(c); return d ? sumarDias(d, 1) : ''; }
+  // Si el "hasta" se llenó solo (o quedó antes del mínimo), se pone al día siguiente del inicio
+  function ajustarVence(c){
+    if (c.estado === 'canjeado') return;
+    var m = minVence(c);
+    if (c._auto || !c.vence) { c.vence = m; c._auto = true; }
+    else if (m && c.vence < m) { c.vence = m; }
   }
 
   function abrirEditor(s){
     ed = s ? JSON.parse(JSON.stringify(s)) : { institucion: '', contacto: '', telefono: '', motivo: '', evento: '', fecha_evento: '', notas: '', cupones: [] };
-    ed.venceDefault = venceSugerido();
     ed.cupones = (ed.cupones || []).map(function(c){
       return { id: c.id, folio: c.folio, estado: c.estado, vencido: c.vencido, ganador_nombre: c.ganador_nombre,
                tipo: c.tipo, titulo: c.titulo, items: c.items || [], monto: c.monto || '', condiciones: DON.notaExtra(c),
@@ -390,7 +402,7 @@
       '<label class="campo"><span>Nombre del premio</span><input data-c="titulo" value="' + E(c.titulo) + '" placeholder="Premio 1"></label>' +
       '<div class="grid2">' +
         '<label class="campo"><span>Válido desde</span><input data-c="valido_desde" type="date" value="' + E(c.valido_desde) + '"></label>' +
-        '<label class="campo"><span>Válido hasta</span><input data-c="vence" type="date" value="' + E(c.vence) + '"></label>' +
+        '<label class="campo"><span>Válido hasta</span><input data-c="vence" type="date" value="' + E(c.vence) + '"' + (minVence(c) ? ' min="' + minVence(c) + '"' : '') + '></label>' +
       '</div>' +
       (c.valido_desde ? '' : '<div class="peq" style="margin:-6px 0 10px">Sin "Válido desde", cuenta la <b>fecha de la rifa</b>' + (ed.fecha_evento ? ' (' + E(DON.fechaCorta(ed.fecha_evento)) + ')' : '') + ': antes no se puede canjear.</div>');
     if (c.tipo === 'monto') {
@@ -439,6 +451,11 @@
     totalEditor();
     p.querySelector('[data-cerrar2]').onclick = function(){ if (ed.id) abrirDetalle(ed.id); else cerrarPanel(); };
     p.querySelectorAll('[data-f]').forEach(function(inp){ inp.oninput = function(){ ed[inp.getAttribute('data-f')] = inp.value; }; });
+    p.querySelector('[data-f=fecha_evento]').onchange = function(){
+      ed.fecha_evento = this.value;
+      ed.cupones.forEach(function(c){ if (!c.valido_desde) ajustarVence(c); });
+      repintarLista();
+    };
     $('add-prod').onclick = function(){ agregar('producto'); };
     $('add-monto').onclick = function(){ agregar('monto'); };
     $('por-dias').onclick = abrirPorDias;
@@ -479,7 +496,17 @@
       var i = +el.getAttribute('data-i');
       var c = function(){ return ed.cupones[i]; };
       el.querySelectorAll('[data-c]').forEach(function(inp){
-        inp.oninput = function(){ c()[inp.getAttribute('data-c')] = inp.value; refrescarValor(el, i); };
+        var k = inp.getAttribute('data-c');
+        if (k === 'valido_desde' || k === 'vence') {
+          inp.onchange = function(){
+            c()[k] = inp.value;
+            if (k === 'vence') c()._auto = !inp.value;
+            ajustarVence(c());
+            repintarCupon(i);
+          };
+          return;
+        }
+        inp.oninput = function(){ c()[k] = inp.value; refrescarValor(el, i); };
       });
       el.querySelectorAll('[data-tipo]').forEach(function(b){
         b.onclick = function(){ c().tipo = b.getAttribute('data-tipo'); repintarCupon(i); };
@@ -558,6 +585,7 @@
           if (d > 0) { delete base.id; delete base.folio; delete base.estado; delete base.vencido; delete base.ganador_nombre; }
           base.titulo = pref + c.titulo.replace(RE_DIA, '');
           base.valido_desde = iso;   // el cupón del Día N no se puede canjear antes de ese día
+          base.vence = sumarDias(iso, 1); base._auto = true;
           nuevos.push(base);
         });
       }
@@ -679,7 +707,8 @@
       if (orig.estado === 'canjeado') continue;
       if (!String(c.titulo || '').trim()) { DON.toast('El cupón ' + (k + 1) + ' no tiene nombre', true); return; }
       if (c.tipo === 'monto' && !(c.monto > 0)) { DON.toast('"' + c.titulo + '": falta el monto', true); return; }
-      if (c.valido_desde && c.vence && c.valido_desde > c.vence) { DON.toast('"' + c.titulo + '": "Válido desde" es después de "Válido hasta"', true); return; }
+      var mv = minVence(orig);
+      if (c.vence && mv && c.vence < mv) { DON.toast('"' + c.titulo + '": "Válido hasta" debe ser al menos el ' + DON.fechaCorta(mv), true); return; }
       if (c.tipo === 'producto' && !c.items.length) { DON.toast('"' + c.titulo + '": agrega al menos un producto', true); return; }
     }
     var b = $('guardar'); b.disabled = true; b.textContent = 'Guardando…';
