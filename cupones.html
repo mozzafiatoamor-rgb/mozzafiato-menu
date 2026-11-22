@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mozzafiato · Cupones de regalo</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#3a3020">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="donativos.css">
+  <style>
+    .hero{text-align:center; padding:34px 20px 10px; max-width:720px; margin:0 auto}
+    .hero img{width:220px; max-width:70%}
+    .hero .gracias{font-family:var(--script); font-size:2.5rem; color:var(--gold-dark); margin:10px 0 4px; line-height:1.1}
+    .hero p{color:var(--text-soft); line-height:1.6; margin:6px 0}
+    .hero .inst{font-family:var(--display); font-size:1.35rem; color:var(--text); font-weight:700}
+    .acciones-top{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:18px 0 6px}
+    .lista{max-width:1100px; margin:0 auto; padding:16px 16px 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:26px}
+    .item .botones{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px}
+    .resumen{font-size:.85rem; color:var(--text-soft)}
+    .uno{max-width:430px; margin:0 auto; padding:10px 16px 60px}
+    .uno .botones{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px}
+    .pie{text-align:center; font-size:.75rem; color:var(--text-soft); padding:0 20px 40px}
+    @media print{
+      body{background:#fff}
+      .no-print,.botones,.acciones-top,.hero p.ayuda{display:none !important}
+      .hero{padding-top:0}
+      .lista{display:block; padding:0}
+      .item{break-inside:avoid; page-break-inside:avoid; max-width:360px; margin:0 auto 18px}
+      .cupon{box-shadow:none; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    }
+  </style>
+</head>
+<body>
+  <div id="app"><div class="cargando">Cargando cupones…</div></div>
+  <div class="pie no-print">Mozzafiato · El placer del buen café · Felipe Carrillo Puerto, Q. Roo</div>
+
+<script src="vendor/qrcode.js"></script>
+<script src="donativos-comun.js"></script>
+<script>
+(function(){
+  'use strict';
+  var $app = document.getElementById('app');
+  var q = new URLSearchParams(location.search);
+  var tokenSol = q.get('t'), tokenCup = q.get('c');
+  var E = DON.esc;
+  var datos = null;
+
+  function tarjeta(c){
+    var est = DON.estadoCupon(c);
+    var lineas = DON.lineasCupon(c).map(E).join('<br>');
+    return '<div class="cupon' + (est.clave !== 'activo' ? ' inactivo' : '') + '">' +
+      '<img class="logo" data-logo="#5e4f30" alt="Mozzafiato">' +
+      '<div class="regalo">Cupón de regalo</div><div class="sep"></div>' +
+      '<div class="titulo">' + E(c.titulo) + '</div>' +
+      '<div class="contenido">' + lineas + '</div>' +
+      '<div class="qr">' + DON.qrSvg(DON.urlCaja(c.folio)) + '</div>' +
+      '<div class="folio">' + E(c.folio) + '</div>' +
+      (c.vence ? '<div class="vence">Válido hasta el ' + E(DON.fecha(c.vence)) + '</div>' : '') +
+      '<div class="cond">' + E(c.condiciones || DON.CONDICIONES_DEFAULT) + ' Presenta este cupón en caja.</div>' +
+      (est.clave !== 'activo' ? '<div class="sello">' + E(est.texto) + '</div>' : '') +
+    '</div>';
+  }
+
+  function botones(c){
+    var est = DON.estadoCupon(c);
+    var h = '<button class="btn chico" data-acc="img" data-folio="' + E(c.folio) + '">⬇︎ Imagen</button>';
+    if (est.clave === 'activo') {
+      h += '<button class="btn chico wa" data-acc="ganador" data-folio="' + E(c.folio) + '">Enviar al ganador</button>' +
+           '<button class="btn chico sec" data-acc="link" data-folio="' + E(c.folio) + '">Copiar link</button>';
+    }
+    return h;
+  }
+
+  function cuponPorFolio(f){ return (datos.cupones || []).filter(function(c){ return c.folio === f; })[0]; }
+
+  function pintarSolicitud(){
+    var cs = datos.cupones || [];
+    var vig = cs.filter(function(c){ return DON.estadoCupon(c).clave === 'activo'; }).length;
+    var h = '<div class="hero">' +
+      '<img data-logo="#5e4f30" alt="Mozzafiato">' +
+      '<div class="gracias">Con cariño para</div>' +
+      '<div class="inst">' + E(datos.institucion) + '</div>' +
+      (datos.evento ? '<p>' + E(datos.evento) + (datos.fecha_evento ? ' · ' + E(DON.fecha(datos.fecha_evento)) : '') + '</p>' : '') +
+      '<p class="ayuda">Estos son los premios que Mozzafiato dona para su rifa. A cada ganador envíale <b>su</b> cupón por WhatsApp ' +
+      'o imprímelos. El ganador lo presenta en caja y se canjea una sola vez.</p>' +
+      '<p class="resumen">' + cs.length + ' cupón' + (cs.length === 1 ? '' : 'es') + ' · ' + vig + ' vigente' + (vig === 1 ? '' : 's') + '</p>' +
+      '<div class="acciones-top">' +
+        '<button class="btn" id="imprimir">🖨 Imprimir todos</button>' +
+        '<button class="btn sec" id="descargar-todos">⬇︎ Descargar todas las imágenes</button>' +
+      '</div></div>';
+    if (!cs.length) h += '<div class="vacio">Aún no hay cupones en esta solicitud.</div>';
+    h += '<div class="lista">' + cs.map(function(c){
+      return '<div class="item">' + tarjeta(c) + '<div class="botones">' + botones(c) + '</div></div>';
+    }).join('') + '</div>';
+    $app.innerHTML = h;
+    DON.pintarLogos();
+    document.getElementById('imprimir').onclick = function(){ window.print(); };
+    document.getElementById('descargar-todos').onclick = async function(){
+      var b = this; b.disabled = true; b.textContent = 'Generando…';
+      for (var i = 0; i < cs.length; i++) {
+        await DON.descargarCupon(cs[i], datos);
+        await new Promise(function(r){ setTimeout(r, 450); });
+      }
+      b.disabled = false; b.textContent = '⬇︎ Descargar todas las imágenes';
+    };
+  }
+
+  function pintarUno(){
+    var c = datos.cupon;
+    $app.innerHTML = '<div class="hero" style="padding-bottom:0">' +
+        '<div class="gracias">¡Felicidades!</div>' +
+        '<p>Ganaste este premio en la rifa de <b>' + E(datos.institucion) + '</b>' + (datos.evento ? ' (' + E(datos.evento) + ')' : '') + '.<br>' +
+        'Muestra este cupón en la caja de Mozzafiato para canjearlo.</p></div>' +
+      '<div class="uno">' + tarjeta(c) +
+        '<div class="botones">' +
+          '<button class="btn chico" data-acc="img" data-folio="' + E(c.folio) + '">⬇︎ Guardar imagen</button>' +
+          '<a class="btn chico sec" href="index.html">Ver el menú</a>' +
+        '</div></div>';
+    DON.pintarLogos();
+  }
+
+  $app.addEventListener('click', async function(ev){
+    var b = ev.target.closest('[data-acc]'); if (!b) return;
+    var c = datos.cupones ? cuponPorFolio(b.getAttribute('data-folio')) : datos.cupon;
+    if (!c) return;
+    var acc = b.getAttribute('data-acc');
+    if (acc === 'img') {
+      b.disabled = true;
+      try { await DON.descargarCupon(c, datos); } catch (e) { DON.toast('No se pudo generar la imagen', true); }
+      b.disabled = false;
+    } else if (acc === 'link') {
+      DON.copiar(DON.urlCupon(c.token));
+    } else if (acc === 'ganador') {
+      var texto = '¡Felicidades! 🎉 Ganaste un premio en la rifa de ' + datos.institucion + ', cortesía de Mozzafiato ☕\n' +
+        DON.lineasCupon(c).join(', ') + '\nFolio: ' + c.folio +
+        (c.vence ? '\nVálido hasta el ' + DON.fecha(c.vence) : '') +
+        '\n\nTu cupón: ' + DON.urlCupon(c.token) + '\nPreséntalo en caja para canjearlo.';
+      b.disabled = true;
+      // En el celular comparte la imagen + texto; si no se puede, abre WhatsApp con el texto y el link
+      var r = 'no';
+      if (navigator.canShare) {
+        try { r = await DON.compartirCupon(c, datos, texto); } catch (e) { r = 'no'; }
+      }
+      if (r === 'no' || r === 'descargado') window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+      b.disabled = false;
+    }
+  });
+
+  async function iniciar(){
+    try {
+      if (tokenCup) {
+        datos = await DON.rpc('don_ver_cupon', { p_token: tokenCup });
+        if (!datos) throw new Error('NO_ENCONTRADO');
+        document.title = 'Mozzafiato · Cupón ' + datos.cupon.folio;
+        pintarUno();
+      } else if (tokenSol) {
+        datos = await DON.rpc('don_ver_solicitud', { p_token: tokenSol });
+        if (!datos) throw new Error('NO_ENCONTRADO');
+        pintarSolicitud();
+      } else {
+        throw new Error('NO_ENCONTRADO');
+      }
+    } catch (e) {
+      var m = /NO_ENCONTRADO/.test(e.message) ? 'Este enlace no es válido o el cupón ya no existe.' : DON.textoError(e);
+      $app.innerHTML = '<div class="hero"><img data-logo="#5e4f30" alt="Mozzafiato"><p style="margin-top:24px">' + E(m) + '</p>' +
+        '<p><a href="index.html">Ver el menú de Mozzafiato</a></p></div>';
+      DON.pintarLogos();
+    }
+  }
+  iniciar();
+})();
+</script>
+</body>
+</html>

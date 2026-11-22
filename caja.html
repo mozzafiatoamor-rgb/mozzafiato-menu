@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mozzafiato · Caja · Cupones</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#3a3020">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="donativos.css">
+  <style>
+    main{max-width:620px; margin:0 auto; padding:18px 16px 60px}
+    .gate{max-width:360px; margin:60px auto; text-align:center; padding:28px 24px}
+    .gate img{width:200px; max-width:70%}
+    .gate h2{margin:14px 0 6px}
+    .gate p{color:var(--text-soft); font-size:.88rem; line-height:1.5}
+    .gate input{text-align:center; font-size:1.4rem; letter-spacing:.35em}
+    .err{color:var(--danger); font-size:.88rem; min-height:1.3em; margin-top:8px}
+    .buscar{padding:18px}
+    .buscar h2{font-size:1.2rem; margin-bottom:10px}
+    .fila{display:flex; gap:8px}
+    .fila input{flex:1; min-width:0; padding:14px; font-size:1.25rem; letter-spacing:.08em; text-transform:uppercase;
+      border:1px solid var(--line); border-radius:12px; background:var(--white); outline:none; font-family:var(--display)}
+    .fila input:focus{border-color:var(--gold)}
+    .resultado{margin-top:18px; overflow:hidden}
+    .banda{padding:16px 18px; color:#fff; font-family:var(--display); font-size:1.35rem; font-weight:700; display:flex; align-items:center; gap:10px}
+    .banda.ok{background:var(--ok)}
+    .banda.no{background:var(--danger)}
+    .detalle{padding:16px 18px}
+    .detalle .folio{font-family:var(--display); font-size:1.5rem; color:var(--gold-dark); font-weight:700}
+    .detalle .tit{font-size:.75rem; letter-spacing:.18em; text-transform:uppercase; color:var(--text-soft); margin-top:2px}
+    .detalle ul{margin:12px 0; padding-left:20px; font-family:var(--display); font-size:1.25rem; line-height:1.5}
+    .detalle .meta{font-size:.85rem; color:var(--text-soft); line-height:1.6}
+    .detalle .meta b{color:var(--text)}
+    .form{border-top:1px solid var(--line); padding:16px 18px 18px; background:rgba(237,232,220,.45)}
+    .listo{text-align:center; padding:26px 18px}
+    .listo .big{font-size:3rem}
+    .listo h2{margin:6px 0}
+    .nota{font-size:.8rem; color:var(--text-soft); line-height:1.5; margin-top:12px}
+    video{width:100%; border-radius:12px; margin-top:12px; background:#000}
+  </style>
+</head>
+<body>
+  <div class="barra">
+    <img data-logo="#d4c49a" alt="">
+    <div class="tit"><div class="t">Mozzafiato</div><div class="s">Caja · Cupones de regalo</div></div>
+    <button class="btn chico sec" id="salir" style="color:var(--footer-text);border-color:rgba(212,196,154,.4)" hidden>Cerrar caja</button>
+  </div>
+
+  <!-- PIN -->
+  <div class="card gate" id="gate" hidden>
+    <img data-logo="#5e4f30" alt="Mozzafiato">
+    <h2>Validar cupones</h2>
+    <p>Ingresa el PIN de caja. Este equipo lo recordará para no pedirlo en cada cupón.</p>
+    <label class="campo"><input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••"></label>
+    <button class="btn grande" id="pin-btn">Entrar</button>
+    <div class="err" id="pin-err"></div>
+  </div>
+
+  <main id="caja" hidden>
+    <div class="card buscar">
+      <h2>Buscar cupón</h2>
+      <div class="fila">
+        <input id="folio" placeholder="DON-XXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="btn" id="buscar">Buscar</button>
+      </div>
+      <button class="btn sec chico" id="escanear" style="margin-top:10px" hidden>📷 Escanear QR</button>
+      <video id="video" playsinline muted hidden></video>
+      <div class="nota">También puedes escanear el QR del cupón con la cámara de esta tablet: se abre aquí mismo con el folio.</div>
+    </div>
+    <div id="resultado"></div>
+  </main>
+
+<script src="vendor/qrcode.js"></script>
+<script src="donativos-comun.js"></script>
+<script>
+(function(){
+  'use strict';
+  var PIN_KEY = 'don.caja.pin';
+  var E = DON.esc;
+  var $ = function(id){ return document.getElementById(id); };
+  var pin = null;
+  try { pin = localStorage.getItem(PIN_KEY); } catch (e) {}
+  var actual = null; // {institucion, evento, cupon}
+
+  function mostrarGate(msg){
+    $('gate').hidden = false; $('caja').hidden = true; $('salir').hidden = true;
+    $('pin-err').textContent = msg || ''; $('pin').value = ''; setTimeout(function(){ $('pin').focus(); }, 50);
+  }
+  function mostrarCaja(){
+    $('gate').hidden = true; $('caja').hidden = false; $('salir').hidden = false;
+  }
+  function olvidarPin(){ pin = null; try { localStorage.removeItem(PIN_KEY); } catch (e) {} }
+
+  $('pin-btn').onclick = async function(){
+    var v = $('pin').value.trim(); if (!v) return;
+    var b = this; b.disabled = true; $('pin-err').textContent = '';
+    try {
+      var ok = await DON.rpc('don_caja_pin_ok', { p_pin: v });
+      if (!ok) { $('pin-err').textContent = 'PIN incorrecto'; }
+      else {
+        pin = v; try { localStorage.setItem(PIN_KEY, v); } catch (e) {}
+        mostrarCaja(); arranqueFolio();
+      }
+    } catch (e) { $('pin-err').textContent = DON.textoError(e); }
+    b.disabled = false;
+  };
+  $('pin').addEventListener('keydown', function(e){ if (e.key === 'Enter') $('pin-btn').click(); });
+  $('salir').onclick = function(){
+    if (confirm('¿Cerrar la caja en este equipo? Se pedirá el PIN otra vez.')) { olvidarPin(); $('resultado').innerHTML = ''; mostrarGate(); }
+  };
+
+  function normalizar(f){
+    f = String(f || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (f.indexOf('DON') === 0) f = f.slice(3);
+    return f ? 'DON-' + f : '';
+  }
+
+  async function buscar(folioArg){
+    var f = normalizar(folioArg != null ? folioArg : $('folio').value);
+    if (!f) return;
+    $('folio').value = f;
+    var r = $('resultado');
+    r.innerHTML = '<div class="card resultado"><div class="cargando">Buscando ' + E(f) + '…</div></div>';
+    try {
+      var d = await DON.rpc('don_caja_consultar', { p_folio: f, p_pin: pin });
+      if (d && d.error === 'PIN_INCORRECTO') { olvidarPin(); r.innerHTML = ''; mostrarGate('El PIN de caja cambió. Ingresa el nuevo.'); return; }
+      if (!d || d.error) { pintarError(f, DON.textoError(d && d.error || 'NO_EXISTE')); return; }
+      actual = d; pintar();
+    } catch (e) { pintarError(f, DON.textoError(e)); }
+  }
+
+  function pintarError(f, msg){
+    $('resultado').innerHTML = '<div class="card resultado"><div class="banda no">✕ ' + E(msg) + '</div>' +
+      '<div class="detalle"><div class="meta">Folio buscado: <b>' + E(f) + '</b>. Revisa que esté bien escrito.</div></div></div>';
+  }
+
+  function pintar(){
+    var c = actual.cupon, est = DON.estadoCupon(c), ok = est.clave === 'activo';
+    var banda = ok ? '<div class="banda ok">✓ Cupón válido</div>'
+      : '<div class="banda no">✕ ' + E(est.clave === 'canjeado' ? 'Ya fue canjeado' : est.clave === 'vencido' ? 'Cupón vencido' : 'Cupón cancelado') + '</div>';
+    var h = '<div class="card resultado">' + banda +
+      '<div class="detalle">' +
+        '<div class="folio">' + E(c.folio) + '</div><div class="tit">' + E(c.titulo) + '</div>' +
+        '<ul>' + DON.lineasCupon(c).map(function(l){ return '<li>' + E(l) + '</li>'; }).join('') + '</ul>' +
+        '<div class="meta">Donado a <b>' + E(actual.institucion) + '</b>' + (actual.evento ? ' · ' + E(actual.evento) : '') + '<br>' +
+          (c.vence ? 'Válido hasta: <b>' + E(DON.fecha(c.vence)) + '</b><br>' : 'Sin fecha de vencimiento<br>') +
+          (c.estado === 'canjeado' ? 'Canjeado el <b>' + E(DON.fechaHora(c.canjeado_en)) + '</b>' + (c.ganador_nombre ? ' por <b>' + E(c.ganador_nombre) + '</b>' : '') + '<br>' : '') +
+          (c.condiciones ? '<i>' + E(c.condiciones) + '</i>' : '') +
+        '</div></div>';
+    if (ok) {
+      h += '<div class="form">' +
+        '<label class="campo"><span>Nombre del ganador *</span><input id="g-nombre" autocomplete="off"></label>' +
+        '<label class="campo"><span>Teléfono del ganador *</span><input id="g-tel" type="tel" inputmode="tel" autocomplete="off" placeholder="10 dígitos"></label>' +
+        '<label class="campo"><span>Nota (opcional)</span><input id="g-nota" autocomplete="off" placeholder="Mesa, # de cuenta…"></label>' +
+        '<button class="btn grande" id="canjear">Canjear cupón</button>' +
+        '<div class="err" id="canje-err"></div>' +
+        '<div class="nota">Se canjea completo y una sola vez' + (c.tipo === 'monto' ? ' (si consume menos del monto, no queda saldo)' : '') + '.</div>' +
+      '</div>';
+    }
+    h += '</div>';
+    $('resultado').innerHTML = h;
+    if (ok) {
+      setTimeout(function(){ $('g-nombre').focus(); }, 50);
+      $('canjear').onclick = canjear;
+    }
+  }
+
+  var confirmando = false;
+  async function canjear(){
+    var c = actual.cupon, b = $('canjear');
+    var nombre = $('g-nombre').value.trim(), tel = $('g-tel').value.trim(), nota = $('g-nota').value.trim();
+    $('canje-err').textContent = '';
+    if (!nombre) { $('canje-err').textContent = 'Escribe el nombre del ganador.'; return; }
+    if (tel.replace(/\D/g, '').length < 10) { $('canje-err').textContent = 'Escribe el teléfono a 10 dígitos.'; return; }
+    if (!confirmando) { confirmando = true; b.textContent = 'Toca otra vez para confirmar'; b.style.background = 'var(--ok)'; b.style.borderColor = 'var(--ok)';
+      setTimeout(function(){ if (confirmando && b.isConnected) { confirmando = false; b.textContent = 'Canjear cupón'; b.style.background = ''; b.style.borderColor = ''; } }, 5000);
+      return; }
+    confirmando = false; b.disabled = true; b.textContent = 'Canjeando…';
+    try {
+      var r = await DON.rpc('don_caja_canjear', { p_folio: c.folio, p_pin: pin, p_nombre: nombre, p_tel: tel, p_notas: nota || null });
+      if (r && r.error === 'PIN_INCORRECTO') { olvidarPin(); mostrarGate('El PIN de caja cambió. Ingresa el nuevo.'); return; }
+      if (!r || r.error) throw new Error(r && r.error || 'Error');
+      $('resultado').innerHTML = '<div class="card resultado"><div class="listo"><div class="big">✅</div>' +
+        '<h2>Cupón canjeado</h2>' +
+        '<p><b>' + E(c.folio) + '</b> · ' + E(nombre) + '</p>' +
+        '<ul style="text-align:left;display:inline-block;font-family:var(--display);font-size:1.15rem">' +
+          DON.lineasCupon(c).map(function(l){ return '<li>' + E(l) + '</li>'; }).join('') + '</ul>' +
+        '<div class="nota">Registra la cuenta como <b>cortesía / donativo</b> y anota el folio <b>' + E(c.folio) + '</b>.</div>' +
+        '<button class="btn" id="otro" style="margin-top:16px">Validar otro cupón</button></div></div>';
+      $('otro').onclick = function(){ $('resultado').innerHTML = ''; $('folio').value = ''; $('folio').focus(); history.replaceState(null, '', 'caja.html'); };
+      DON.toast('Cupón canjeado');
+    } catch (e) {
+      b.disabled = false; b.textContent = 'Canjear cupón'; b.style.background = ''; b.style.borderColor = '';
+      $('canje-err').textContent = DON.textoError(e);
+      if (/YA_CANJEADO|VENCIDO|CANCELADO/.test(e.message)) setTimeout(function(){ buscar(c.folio); }, 1500);
+    }
+  }
+
+  $('buscar').onclick = function(){ buscar(); };
+  $('folio').addEventListener('keydown', function(e){ if (e.key === 'Enter') buscar(); });
+
+  // ── Escanear con la cámara (Chrome/Android) ──
+  var stream = null, detector = null;
+  if ('BarcodeDetector' in window) $('escanear').hidden = false;
+  $('escanear').onclick = async function(){
+    if (stream) { pararCamara(); return; }
+    try {
+      detector = detector || new BarcodeDetector({ formats: ['qr_code'] });
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      var v = $('video'); v.srcObject = stream; v.hidden = false; await v.play();
+      this.textContent = '✕ Cerrar cámara';
+      leer();
+    } catch (e) { DON.toast('No se pudo abrir la cámara', true); pararCamara(); }
+  };
+  function pararCamara(){
+    if (stream) stream.getTracks().forEach(function(t){ t.stop(); });
+    stream = null; $('video').hidden = true; $('escanear').textContent = '📷 Escanear QR';
+  }
+  async function leer(){
+    if (!stream) return;
+    try {
+      var cods = await detector.detect($('video'));
+      if (cods && cods.length) {
+        var raw = cods[0].rawValue || '', f = raw;
+        try { var u = new URL(raw); f = u.searchParams.get('f') || raw; } catch (e) {}
+        pararCamara(); buscar(f); return;
+      }
+    } catch (e) {}
+    setTimeout(leer, 300);
+  }
+
+  function arranqueFolio(){
+    var f = new URLSearchParams(location.search).get('f');
+    if (f) buscar(f); else setTimeout(function(){ $('folio').focus(); }, 50);
+  }
+
+  DON.pintarLogos();
+  if (pin) { mostrarCaja(); arranqueFolio(); } else mostrarGate();
+})();
+</script>
+</body>
+</html>
