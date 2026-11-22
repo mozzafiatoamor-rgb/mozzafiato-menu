@@ -429,6 +429,7 @@
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn sec" id="add-prod">+ Cupón de productos</button>' +
           '<button class="btn sec" id="add-monto">+ Cupón de monto</button>' +
+          '<button class="btn sec" id="por-dias">📅 Repetir para varios días</button>' +
         '</div></div>';
     var pie = '<span class="peq" id="total-ed" style="margin-right:auto;align-self:center"></span>' +
               '<button class="btn sec" data-cerrar2>Cancelar</button><button class="btn" id="guardar">Guardar</button>';
@@ -438,6 +439,7 @@
     p.querySelectorAll('[data-f]').forEach(function(inp){ inp.oninput = function(){ ed[inp.getAttribute('data-f')] = inp.value; }; });
     $('add-prod').onclick = function(){ agregar('producto'); };
     $('add-monto').onclick = function(){ agregar('monto'); };
+    $('por-dias').onclick = abrirPorDias;
     $('guardar').onclick = guardar;
     conectarCupones(p);
   }
@@ -505,6 +507,64 @@
       });
     });
   }
+  // ── Evento de varios días: copia los premios de un día para cada día ──
+  var RE_DIA = /^Día \d+ \([^)]*\) · /;
+  var DIAS_SEM = ['dom','lun','mar','mié','jue','vie','sáb'];
+  function etiquetaDia(n, iso){
+    var d = new Date(iso + 'T12:00:00');
+    return 'Día ' + n + ' (' + DIAS_SEM[d.getDay()] + ' ' + d.getDate() + ' ' + ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][d.getMonth()] + ')';
+  }
+  function abrirPorDias(){
+    var viejo = $('panel-dias'); if (viejo) { viejo.remove(); return; }
+    var paquete = ed.cupones.filter(function(c){ return c.estado !== 'canjeado' && !c.cancelar && !RE_DIA.test(c.titulo); });
+    var cont = $('por-dias').parentNode;
+    if (!paquete.length) {
+      DON.toast('Primero arma los premios de UN día (los que aún no tienen "Día N")', true); return;
+    }
+    cont.insertAdjacentHTML('afterend',
+      '<div class="card" id="panel-dias" style="padding:14px;margin-top:12px;background:var(--bg)">' +
+        '<b>📅 Evento de varios días</b>' +
+        '<p class="peq" style="margin:6px 0 10px">Los <b>' + paquete.length + '</b> premio(s) que tienes ahora se toman como el paquete de <b>un día</b> ' +
+          'y se copian para cada día. Cada cupón queda marcado con su día (ej. "Día 2 (sáb 6 dic) · Premio 1").</p>' +
+        '<div class="grid2">' +
+          '<label class="campo"><span>Primer día del evento</span><input type="date" id="dias-ini" value="' + E(ed.fecha_evento || DON.hoyISO()) + '"></label>' +
+          '<label class="campo"><span>¿Cuántos días?</span><input type="number" id="dias-n" min="2" max="31" value="3" inputmode="numeric"></label>' +
+        '</div>' +
+        '<div class="peq" id="dias-prev" style="margin-bottom:10px"></div>' +
+        '<button class="btn chico" id="dias-ok">Generar cupones por día</button> ' +
+        '<button class="btn chico sec" id="dias-x">Cancelar</button>' +
+      '</div>');
+    function prev(){
+      var n = Math.min(31, Math.max(2, parseInt($('dias-n').value, 10) || 2));
+      $('dias-prev').innerHTML = 'Se generarán <b>' + (paquete.length * n) + '</b> cupones en total (' + paquete.length + ' × ' + n + ' días).';
+    }
+    $('dias-n').oninput = prev; prev();
+    $('dias-x').onclick = function(){ $('panel-dias').remove(); };
+    $('dias-ok').onclick = function(){
+      var ini = $('dias-ini').value;
+      var n = Math.min(31, Math.max(2, parseInt($('dias-n').value, 10) || 2));
+      if (!ini) { DON.toast('Elige el primer día', true); return; }
+      var otros = ed.cupones.filter(function(c){ return paquete.indexOf(c) === -1; });
+      var nuevos = [];
+      for (var d = 0; d < n; d++) {
+        var f = new Date(ini + 'T12:00:00'); f.setDate(f.getDate() + d);
+        var iso = f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0');
+        var pref = etiquetaDia(d + 1, iso) + ' · ';
+        paquete.forEach(function(c){
+          var base = d === 0 ? c : JSON.parse(JSON.stringify(c));
+          if (d > 0) { delete base.id; delete base.folio; delete base.estado; delete base.vencido; delete base.ganador_nombre; }
+          base.titulo = pref + c.titulo.replace(RE_DIA, '');
+          nuevos.push(base);
+        });
+      }
+      ed.cupones = otros.concat(nuevos);
+      if (!ed.fecha_evento) ed.fecha_evento = ini;
+      $('panel-dias').remove();
+      repintarLista();
+      DON.toast(nuevos.length + ' cupones listos. Revisa y dale Guardar.');
+    };
+  }
+
   // ── Armador de combos (pasta, latte, frappé…) ──
   // Cada paso se puede fijar o dejar "a elección del ganador".
   // Valor: suma de lo elegido; en los pasos a elección se toma la opción más cara (valor máximo posible).

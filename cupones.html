@@ -18,6 +18,8 @@
     .hero .inst{font-family:var(--display); font-size:1.35rem; color:var(--text); font-weight:700}
     .acciones-top{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:18px 0 6px}
     .lista{max-width:1100px; margin:0 auto; padding:16px 16px 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:26px}
+    .dia{max-width:1100px; margin:18px auto 0; padding:10px 16px 0; font-size:1.4rem; border-top:1px solid var(--line)}
+    @media print{ .dia{break-before:page; page-break-before:always; border:none} .dia:first-of-type{break-before:auto; page-break-before:auto} }
     .item .botones{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px}
     .resumen{font-size:.85rem; color:var(--text-soft)}
     .uno{max-width:430px; margin:0 auto; padding:10px 16px 60px}
@@ -93,9 +95,20 @@
         '<button class="btn sec" id="descargar-todos">⬇︎ Descargar todas las imágenes</button>' +
       '</div></div>';
     if (!cs.length) h += '<div class="vacio">Aún no hay cupones en esta solicitud.</div>';
-    h += '<div class="lista">' + cs.map(function(c){
-      return '<div class="item">' + tarjeta(c) + '<div class="botones">' + botones(c) + '</div></div>';
-    }).join('') + '</div>';
+    // Si es un evento de varios días, se agrupan por día ("Día N (…) · Premio")
+    var grupos = [], porClave = {};
+    cs.forEach(function(c){
+      var m = String(c.titulo || '').match(/^(Día \d+ \([^)]*\)) · /);
+      var k = m ? m[1] : '';
+      if (!(k in porClave)) { porClave[k] = { titulo: k, cs: [] }; grupos.push(porClave[k]); }
+      porClave[k].cs.push(c);
+    });
+    grupos.forEach(function(g){
+      if (g.titulo) h += '<h2 class="dia">' + E(g.titulo) + '</h2>';
+      h += '<div class="lista">' + g.cs.map(function(c){
+        return '<div class="item">' + tarjeta(c) + '<div class="botones">' + botones(c) + '</div></div>';
+      }).join('') + '</div>';
+    });
     $app.innerHTML = h;
     DON.pintarLogos();
     document.getElementById('imprimir').onclick = function(){ window.print(); };
