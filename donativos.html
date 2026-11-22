@@ -134,6 +134,14 @@
   var CATALOGO = (typeof COTIZADOR_MENU !== 'undefined' ? COTIZADOR_MENU : []).map(function(p){
     return { nombre: p.name, cat: p.cat, precio: Number(p.price) || 0, k: quitarAcentos(p.name + ' ' + p.cat) };
   });
+  // Artículos que se arman por pasos (pastas, lattes, frappés…), del cotizador
+  (typeof COTIZADOR_COMBOS !== 'undefined' ? COTIZADOR_COMBOS : []).forEach(function(c){
+    var corto = String(c.label || c.id).split(' (')[0];
+    var opciones = c.groups.map(function(g){ return g.options.map(function(o){ return o.n; }).join(' '); }).join(' ');
+    CATALOGO.unshift({ combo: c, nombre: corto, cat: c.cat, precio: Number(c.from) || 0,
+                       k: quitarAcentos(corto + ' ' + c.cat + ' ' + c.label + ' ' + opciones) });
+  });
+  var A_ELEGIR = '__elegir__';
 
   function quitarAcentos(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
 
@@ -487,12 +495,65 @@
       });
       var bus = el.querySelector('[data-buscar]');
       if (bus) conectarBuscador(bus, el.querySelector('.sug'), function(prod){
+        if (prod.combo) { bus.value = ''; el.querySelector('.sug').hidden = true; abrirArmador(el, i, prod); return; }
         c().items.push({ nombre: prod.nombre, cant: 1, precio: prod.precio });
         repintarCupon(i);
         var nuevo = $('lista-cup').querySelector('.cup-ed[data-i="' + i + '"] [data-buscar]'); if (nuevo) nuevo.focus();
       });
     });
   }
+  // ── Armador de combos (pasta, latte, frappé…) ──
+  // Cada paso se puede fijar o dejar "a elección del ganador".
+  // Valor: suma de lo elegido; en los pasos a elección se toma la opción más cara (valor máximo posible).
+  function armarCombo(prod, sel){
+    var c = prod.combo, partes = [], precio = 0, todoElegir = true;
+    c.groups.forEach(function(g, gi){
+      var v = sel[gi];
+      if (v === A_ELEGIR) {
+        precio += Math.max.apply(null, g.options.map(function(o){ return Number(o.p) || 0; }));
+        partes.push(g.label.toLowerCase() + ' a elegir');
+      } else {
+        var o = g.options[+v]; todoElegir = false;
+        precio += Number(o.p) || 0;
+        if (!o.none) partes.push(o.n);
+      }
+    });
+    var nombre = todoElegir ? prod.nombre + ' (a elegir por el ganador)' : prod.nombre + ': ' + partes.join(', ');
+    return { nombre: nombre, precio: precio };
+  }
+  function abrirArmador(el, i, prod){
+    var viejo = el.querySelector('.armador'); if (viejo) viejo.remove();
+    var c = prod.combo;
+    var h = '<div class="armador card" style="padding:12px;margin-top:8px;background:var(--bg)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>🧩 Armar: ' + E(prod.nombre) + '</b>' +
+      '<button class="btn chico sec" data-arm-x>×</button></div><div class="grid2">' +
+      c.groups.map(function(g, gi){
+        var tieneNinguno = g.options.some(function(o){ return o.none; });
+        return '<label class="campo"><span>' + E(g.label) + '</span><select data-g="' + gi + '">' +
+          '<option value="' + A_ELEGIR + '"' + (tieneNinguno ? '' : ' selected') + '>— A elección del ganador —</option>' +
+          g.options.map(function(o, oi){
+            return '<option value="' + oi + '"' + (tieneNinguno && o.none ? ' selected' : '') + '>' + E(o.n) + (o.p ? ' · ' + DON.dinero(o.p) : '') + '</option>';
+          }).join('') + '</select></label>';
+      }).join('') +
+      '<label class="campo"><span>Cantidad</span><input data-arm-cant type="number" min="1" value="1" inputmode="numeric"></label>' +
+      '</div><div class="peq" data-arm-prev style="margin-bottom:8px"></div>' +
+      '<button class="btn chico" data-arm-ok>Agregar al cupón</button></div>';
+    el.querySelector('.buscador').insertAdjacentHTML('afterend', h);
+    var arm = el.querySelector('.armador');
+    function sel(){ return Array.prototype.map.call(arm.querySelectorAll('[data-g]'), function(s){ return s.value; }); }
+    function prev(){ var r = armarCombo(prod, sel()); arm.querySelector('[data-arm-prev]').innerHTML = 'Quedará: <b>' + E(r.nombre) + '</b> · ' + DON.dinero(r.precio) + ' c/u'; }
+    arm.querySelectorAll('select').forEach(function(s){ s.onchange = prev; });
+    prev();
+    arm.querySelector('[data-arm-x]').onclick = function(){ arm.remove(); };
+    arm.querySelector('[data-arm-ok]').onclick = function(){
+      var r = armarCombo(prod, sel());
+      var n = Math.max(1, parseInt(arm.querySelector('[data-arm-cant]').value, 10) || 1);
+      ed.cupones[i].items.push({ nombre: r.nombre, cant: n, precio: r.precio });
+      repintarCupon(i);
+    };
+    arm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
   // Si el título sigue siendo "Premio N" automático, lo renumera
   function renumerarTitulos(){
     ed.cupones.forEach(function(c, k){ if (!c.folio && /^Premio \d+$/.test(c.titulo)) c.titulo = 'Premio ' + (k + 1); });
@@ -515,6 +576,7 @@
       sug.innerHTML = res.map(function(p, k){
         return '<div data-k="' + k + '" class="' + (k === sel ? 'sel' : '') + '">' +
           (p.libre ? '<span>Agregar “' + E(p.nombre) + '” (otro)</span><small>precio a mano</small>'
+           : p.combo ? '<span>🧩 ' + E(p.nombre) + ' <small>· armar</small></span><small>desde ' + DON.dinero(p.precio) + '</small>'
                    : '<span>' + E(p.nombre) + ' <small>· ' + E(p.cat) + '</small></span><small>' + DON.dinero(p.precio) + '</small>') + '</div>';
       }).join('');
       sug.hidden = false;
