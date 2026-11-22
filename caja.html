@@ -141,15 +141,16 @@
   }
 
   function pintar(){
-    var c = actual.cupon, est = DON.estadoCupon(c), ok = est.clave === 'activo';
+    var c = actual.cupon, est = DON.estadoCupon(c), pend = est.clave === 'activo' && c.pendiente, ok = est.clave === 'activo' && !pend;
     var banda = ok ? '<div class="banda ok">✓ Cupón válido</div>'
+      : pend ? '<div class="banda no">✕ Aún no es válido · se puede canjear a partir del ' + E(DON.fecha(c.desde)) + '</div>'
       : '<div class="banda no">✕ ' + E(est.clave === 'canjeado' ? 'Ya fue canjeado' : est.clave === 'vencido' ? 'Cupón vencido' : 'Cupón cancelado') + '</div>';
     var h = '<div class="card resultado">' + banda +
       '<div class="detalle">' +
         '<div class="folio">' + E(c.folio) + '</div><div class="tit">' + E(c.titulo) + '</div>' +
         '<ul>' + DON.lineasCupon(c).map(function(l){ return '<li>' + E(l) + '</li>'; }).join('') + '</ul>' +
         '<div class="meta">Donado a <b>' + E(actual.institucion) + '</b>' + (actual.evento ? ' · ' + E(actual.evento) : '') + '<br>' +
-          (c.vence ? 'Válido hasta: <b>' + E(DON.fecha(c.vence)) + '</b><br>' : 'Sin fecha de vencimiento<br>') +
+          (DON.vigenciaTexto(c) ? 'Vigencia: <b>' + E(DON.vigenciaTexto(c).replace(/^Válido /, '')) + '</b><br>' : 'Sin fechas de vigencia<br>') +
           (c.estado === 'canjeado' ? 'Canjeado el <b>' + E(DON.fechaHora(c.canjeado_en)) + '</b>' + (c.ganador_nombre ? ' por <b>' + E(c.ganador_nombre) + '</b>' : '') + '<br>' : '') +
         '</div>' +
         '<div class="recordar"><b>Antes de canjear, recuerda:</b>' + DON.normasHtml(c) + '</div>' +
@@ -200,7 +201,7 @@
     } catch (e) {
       b.disabled = false; b.textContent = 'Canjear cupón'; b.style.background = ''; b.style.borderColor = '';
       $('canje-err').textContent = DON.textoError(e);
-      if (/YA_CANJEADO|VENCIDO|CANCELADO/.test(e.message)) setTimeout(function(){ buscar(c.folio); }, 1500);
+      if (/YA_CANJEADO|VENCIDO|CANCELADO|AUN_NO_VALIDO/.test(e.message)) setTimeout(function(){ buscar(c.folio); }, 1500);
     }
   }
 

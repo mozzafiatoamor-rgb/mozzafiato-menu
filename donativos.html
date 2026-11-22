@@ -273,7 +273,7 @@
       var est = DON.estadoCupon(c);
       return '<tr>' +
         '<td><div class="folio">' + E(c.folio) + '</div><div class="peq">' + E(c.titulo) + '</div></td>' +
-        '<td>' + DON.lineasCupon(c).map(E).join('<br>') + (c.vence ? '<div class="peq">Vence ' + E(DON.fechaCorta(c.vence)) + '</div>' : '') + '</td>' +
+        '<td>' + DON.lineasCupon(c).map(E).join('<br>') + (DON.vigenciaTexto(c) ? '<div class="peq">' + E(DON.vigenciaTexto(c)) + '</div>' : '') + '</td>' +
         '<td class="num">' + DON.dinero(c.valor) + '</td>' +
         '<td><span class="chip ' + est.clave + '">' + est.texto + '</span>' +
           (c.estado === 'canjeado' ? '<div class="peq" style="margin-top:4px">' + E(c.ganador_nombre || '') + '<br>' +
@@ -342,7 +342,7 @@
     return { tipo: base.tipo || 'producto', titulo: 'Premio ' + n,
              items: (base.items || []).map(function(i){ return { nombre: i.nombre, cant: i.cant, precio: i.precio }; }),
              monto: base.monto || '', condiciones: base.condiciones != null ? base.condiciones : DON.CONDICIONES_DEFAULT,
-             vence: base.vence || (ed && ed.venceDefault) || '' };
+             vence: base.vence || (ed && ed.venceDefault) || '', valido_desde: base.valido_desde || '' };
   }
   function venceSugerido(){ // 3 meses
     var d = new Date(DON.hoyISO() + 'T12:00:00'); d.setMonth(d.getMonth() + 3);
@@ -355,7 +355,7 @@
     ed.cupones = (ed.cupones || []).map(function(c){
       return { id: c.id, folio: c.folio, estado: c.estado, vencido: c.vencido, ganador_nombre: c.ganador_nombre,
                tipo: c.tipo, titulo: c.titulo, items: c.items || [], monto: c.monto || '', condiciones: DON.notaExtra(c),
-               vence: c.vence || '', cancelar: c.estado === 'cancelado' };
+               vence: c.vence || '', valido_desde: c.valido_desde || '', cancelar: c.estado === 'cancelado' };
     });
     if (!ed.cupones.length) ed.cupones.push(cuponVacio(1));
     pintarEditor();
@@ -387,10 +387,12 @@
          (c.folio ? '<button class="btn chico ' + (c.cancelar ? 'sec' : 'peligro') + '" data-cancelar>' + (c.cancelar ? 'Reactivar' : 'Cancelar') + '</button>'
                   : '<button class="btn chico peligro" data-quitar>Quitar</button>') +
       '</div>' +
+      '<label class="campo"><span>Nombre del premio</span><input data-c="titulo" value="' + E(c.titulo) + '" placeholder="Premio 1"></label>' +
       '<div class="grid2">' +
-        '<label class="campo"><span>Nombre del premio</span><input data-c="titulo" value="' + E(c.titulo) + '" placeholder="Premio 1"></label>' +
+        '<label class="campo"><span>Válido desde</span><input data-c="valido_desde" type="date" value="' + E(c.valido_desde) + '"></label>' +
         '<label class="campo"><span>Válido hasta</span><input data-c="vence" type="date" value="' + E(c.vence) + '"></label>' +
-      '</div>';
+      '</div>' +
+      (c.valido_desde ? '' : '<div class="peq" style="margin:-6px 0 10px">Sin "Válido desde", cuenta la <b>fecha de la rifa</b>' + (ed.fecha_evento ? ' (' + E(DON.fechaCorta(ed.fecha_evento)) + ')' : '') + ': antes no se puede canjear.</div>');
     if (c.tipo === 'monto') {
       h += '<label class="campo"><span>Monto de consumo (una sola visita)</span><input data-c="monto" type="number" inputmode="decimal" min="1" step="1" value="' + E(c.monto) + '" placeholder="500"></label>';
     } else {
@@ -525,7 +527,8 @@
       '<div class="card" id="panel-dias" style="padding:14px;margin-top:12px;background:var(--bg)">' +
         '<b>📅 Evento de varios días</b>' +
         '<p class="peq" style="margin:6px 0 10px">Los <b>' + paquete.length + '</b> premio(s) que tienes ahora se toman como el paquete de <b>un día</b> ' +
-          'y se copian para cada día. Cada cupón queda marcado con su día (ej. "Día 2 (sáb 6 dic) · Premio 1").</p>' +
+          'y se copian para cada día. Cada cupón queda marcado con su día (ej. "Día 2 (sáb 6 dic) · Premio 1") ' +
+          'y <b>no se puede canjear antes de su día</b>.</p>' +
         '<div class="grid2">' +
           '<label class="campo"><span>Primer día del evento</span><input type="date" id="dias-ini" value="' + E(ed.fecha_evento || DON.hoyISO()) + '"></label>' +
           '<label class="campo"><span>¿Cuántos días?</span><input type="number" id="dias-n" min="2" max="31" value="3" inputmode="numeric"></label>' +
@@ -554,6 +557,7 @@
           var base = d === 0 ? c : JSON.parse(JSON.stringify(c));
           if (d > 0) { delete base.id; delete base.folio; delete base.estado; delete base.vencido; delete base.ganador_nombre; }
           base.titulo = pref + c.titulo.replace(RE_DIA, '');
+          base.valido_desde = iso;   // el cupón del Día N no se puede canjear antes de ese día
           nuevos.push(base);
         });
       }
@@ -667,7 +671,7 @@
                  items: (c.items || []).filter(function(i){ return String(i.nombre || '').trim(); })
                           .map(function(i){ return { nombre: String(i.nombre).trim(), cant: Math.max(1, parseInt(i.cant, 10) || 1), precio: Number(i.precio) || 0 }; }),
                  monto: c.tipo === 'monto' ? (Number(c.monto) || null) : null,
-                 condiciones: c.condiciones || null, vence: c.vence || null };
+                 condiciones: c.condiciones || null, vence: c.vence || null, valido_desde: c.valido_desde || null };
       })
     };
     for (var k = 0; k < payload.cupones.length; k++) {
@@ -675,6 +679,7 @@
       if (orig.estado === 'canjeado') continue;
       if (!String(c.titulo || '').trim()) { DON.toast('El cupón ' + (k + 1) + ' no tiene nombre', true); return; }
       if (c.tipo === 'monto' && !(c.monto > 0)) { DON.toast('"' + c.titulo + '": falta el monto', true); return; }
+      if (c.valido_desde && c.vence && c.valido_desde > c.vence) { DON.toast('"' + c.titulo + '": "Válido desde" es después de "Válido hasta"', true); return; }
       if (c.tipo === 'producto' && !c.items.length) { DON.toast('"' + c.titulo + '": agrega al menos un producto', true); return; }
     }
     var b = $('guardar'); b.disabled = true; b.textContent = 'Guardando…';

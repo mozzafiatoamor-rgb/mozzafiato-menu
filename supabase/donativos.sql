@@ -68,6 +68,8 @@ create table if not exists donativos.cupones (
   creado         timestamptz not null default now()
 );
 create index if not exists cupones_solicitud_idx on donativos.cupones(solicitud_id);
+-- Fecha desde la que se puede canjear (si está vacía, cuenta la fecha de la rifa)
+alter table donativos.cupones add column if not exists valido_desde date;
 
 create table if not exists donativos.intentos_pin (
   id  bigserial primary key,
@@ -139,6 +141,12 @@ begin
   return false;
 end $$;
 
+-- Desde cuándo se puede canjear: su propia fecha o, si no tiene, la fecha de la rifa
+create or replace function donativos._desde(c donativos.cupones) returns date
+language sql stable set search_path = donativos, public as $$
+  select coalesce(c.valido_desde, (select s.fecha_evento from donativos.solicitudes s where s.id = c.solicitud_id));
+$$;
+
 create or replace function donativos._cupon_json(c donativos.cupones, privado boolean) returns jsonb
 language sql stable set search_path = donativos, public as $$
   select jsonb_strip_nulls(jsonb_build_object(
@@ -154,6 +162,9 @@ language sql stable set search_path = donativos, public as $$
     'valor',       case when privado then c.valor end,
     'condiciones', c.condiciones,
     'vence',       c.vence,
+    'valido_desde', case when privado then c.valido_desde end,
+    'desde',       donativos._desde(c),
+    'pendiente',   (c.estado = 'activo' and donativos._desde(c) is not null and donativos._desde(c) > donativos._hoy()),
     'estado',      c.estado,
     'vencido',     (c.estado = 'activo' and c.vence is not null and c.vence < donativos._hoy()),
     'canjeado_en', c.canjeado_en,
@@ -199,7 +210,7 @@ create or replace function public.don_guardar_solicitud(p jsonb) returns jsonb
 language plpgsql volatile security definer set search_path = donativos, public as $$
 declare
   sid uuid; c jsonb; cid uuid; ids uuid[] := '{}'; n int := 0;
-  v_tipo text; v_items jsonb; v_monto numeric; v_valor numeric;
+  v_tipo text; v_items jsonb; v_monto numeric; v_valor numeric; v_desde date; v_vence date;
 begin
   perform donativos._exigir_admin();
   if coalesce(trim(p->>'institucion'), '') = '' then
@@ -229,20 +240,23 @@ begin
     v_valor := case when v_tipo = 'monto' then coalesce(v_monto, 0)
                     else coalesce((select sum(coalesce((i->>'cant')::numeric,1) * coalesce((i->>'precio')::numeric,0))
                                    from jsonb_array_elements(v_items) i), 0) end;
+    v_desde := nullif(c->>'valido_desde','')::date;
+    v_vence := nullif(c->>'vence','')::date;
+    if v_desde is not null and v_vence is not null and v_desde > v_vence then raise exception 'FECHAS_INVERTIDAS'; end if;
     if coalesce(trim(c->>'titulo'), '') = '' then raise exception 'FALTA_TITULO_CUPON'; end if;
     if v_tipo = 'monto' and coalesce(v_monto, 0) <= 0 then raise exception 'FALTA_MONTO'; end if;
     if v_tipo = 'producto' and jsonb_array_length(v_items) = 0 then raise exception 'FALTAN_PRODUCTOS'; end if;
 
     if nullif(c->>'id', '') is null then
-      insert into donativos.cupones (solicitud_id, folio, orden, tipo, titulo, items, monto, valor, condiciones, vence)
+      insert into donativos.cupones (solicitud_id, folio, orden, tipo, titulo, items, monto, valor, condiciones, vence, valido_desde)
       values (sid, donativos._nuevo_folio(), n, v_tipo, trim(c->>'titulo'), v_items, v_monto, v_valor,
-              c->>'condiciones', nullif(c->>'vence','')::date)
+              c->>'condiciones', v_vence, v_desde)
       returning id into cid;
     else
       cid := (c->>'id')::uuid;
       update donativos.cupones set
         orden = n, tipo = v_tipo, titulo = trim(c->>'titulo'), items = v_items, monto = v_monto,
-        valor = v_valor, condiciones = c->>'condiciones', vence = nullif(c->>'vence','')::date,
+        valor = v_valor, condiciones = c->>'condiciones', vence = v_vence, valido_desde = v_desde,
         estado = case when coalesce((c->>'cancelar')::boolean, false) then 'cancelado' else 'activo' end
       where id = cid and solicitud_id = sid and estado <> 'canjeado';
       -- si estaba canjeado, solo se respeta su orden
@@ -286,7 +300,7 @@ begin
   if p_pin is null or length(trim(p_pin)) < 4 then raise exception 'PIN_CORTO'; end if;
   insert into donativos.config (clave, valor) values ('pin_caja', extensions.crypt(trim(p_pin), extensions.gen_salt('bf')))
   on conflict (clave) do update set valor = excluded.valor;
-  delete from donativos.intentos_pin;
+  delete from donativos.intentos_pin where id is not null;
 end $$;
 
 -- ADMIN: ¿ya hay PIN de caja?
@@ -351,6 +365,9 @@ begin
   if c.estado = 'canjeado' then return jsonb_build_object('error', 'YA_CANJEADO'); end if;
   if c.estado = 'cancelado' then return jsonb_build_object('error', 'CANCELADO'); end if;
   if c.vence is not null and c.vence < donativos._hoy() then return jsonb_build_object('error', 'VENCIDO'); end if;
+  if donativos._desde(c) is not null and donativos._desde(c) > donativos._hoy() then
+    return jsonb_build_object('error', 'AUN_NO_VALIDO', 'desde', donativos._desde(c));
+  end if;
   update donativos.cupones set estado = 'canjeado', canjeado_en = now(),
          ganador_nombre = trim(p_nombre), ganador_tel = trim(p_tel), canje_notas = nullif(trim(p_notas), '')
   where id = c.id;

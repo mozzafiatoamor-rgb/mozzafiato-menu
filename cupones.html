@@ -60,7 +60,7 @@
       '<div class="contenido">' + lineas + '</div>' +
       '<div class="qr">' + DON.qrSvg(DON.urlCaja(c.folio)) + '</div>' +
       '<div class="folio">' + E(c.folio) + '</div>' +
-      (c.vence ? '<div class="vence">Válido hasta el ' + E(DON.fecha(c.vence)) + '</div>' : '') +
+      (DON.vigenciaTexto(c) ? '<div class="vence">' + E(DON.vigenciaTexto(c)) + '</div>' : '') +
       '<div class="cond"><b>CONDICIONES</b>' + DON.normasHtml(c) + '</div>' +
       (est.clave !== 'activo' ? '<div class="sello">' + E(est.texto) + '</div>' : '') +
     '</div>';
@@ -150,7 +150,7 @@
     } else if (acc === 'ganador') {
       var texto = '¡Felicidades! 🎉 Ganaste un premio en la rifa de ' + datos.institucion + ', cortesía de Mozzafiato ☕\n' +
         DON.lineasCupon(c).join(', ') + '\nFolio: ' + c.folio +
-        (c.vence ? '\nVálido hasta el ' + DON.fecha(c.vence) : '') +
+        (DON.vigenciaTexto(c) ? '\n' + DON.vigenciaTexto(c) : '') +
         '\n\nTu cupón: ' + DON.urlCupon(c.token) +
         '\n\nEs para consumir en el restaurante (no aplica para llevar) y se usa una sola vez. Preséntalo en caja para validarlo.';
       b.disabled = true;

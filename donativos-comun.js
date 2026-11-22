@@ -46,6 +46,8 @@
     YA_CANJEADO: 'Este cupón YA FUE CANJEADO.',
     CANCELADO: 'Este cupón fue CANCELADO.',
     VENCIDO: 'Este cupón está VENCIDO.',
+    AUN_NO_VALIDO: 'Este cupón AÚN NO ES VÁLIDO (todavía no llega su fecha).',
+    FECHAS_INVERTIDAS: 'La fecha "Válido desde" no puede ser después de "Válido hasta".',
     FALTA_NOMBRE: 'Escribe el nombre del ganador.',
     FALTA_TELEFONO: 'Escribe el teléfono del ganador.',
     FALTA_INSTITUCION: 'Falta el nombre de la institución.',
@@ -165,6 +167,14 @@
       var n = Number(i.cant) || 1;
       return (n > 1 ? n + ' × ' : '') + i.nombre;
     });
+  }
+  // "Válido del 5 de diciembre al 31 de enero de 2027" (usa la fecha de la rifa si no tiene su propio inicio)
+  function vigenciaTexto(c) {
+    var d = c.desde || c.valido_desde, v = c.vence;
+    if (d && v) return 'Válido del ' + fecha(d).replace(/ de \d{4}$/, d.slice(0, 4) === String(v).slice(0, 4) ? '' : '$&') + ' al ' + fecha(v);
+    if (d) return 'Válido a partir del ' + fecha(d);
+    if (v) return 'Válido hasta el ' + fecha(v);
+    return '';
   }
   function estadoCupon(c) {
     if (c.estado === 'canjeado') return { clave: 'canjeado', texto: 'Canjeado' };
@@ -304,7 +314,7 @@
     x.fillStyle = ORO_OSC; x.font = '700 46px "Playfair Display", Georgia, serif';
     txt(c.folio, y); y += 52;
     x.fillStyle = SUAVE; x.font = '26px "Libre Baskerville", Georgia, serif';
-    if (c.vence) { txt('Válido hasta el ' + fecha(c.vence), y); y += 40; }
+    if (vigenciaTexto(c)) { txt(vigenciaTexto(c), y); y += 40; }
     x.font = 'italic 24px "Libre Baskerville", Georgia, serif';
     envolver(x, 'Cortesía para ' + (info.institucion || '') + (info.evento ? ' · ' + info.evento : ''), W - 220)
       .forEach(function (s) { txt(s, y); y += 34; });
@@ -398,7 +408,7 @@
     textoError: textoError, dinero: dinero, fecha: fecha, fechaCorta: fechaCorta, fechaHora: fechaHora,
     hoyISO: hoyISO, esc: esc, telWa: telWa, waLink: waLink,
     urlInstitucion: urlInstitucion, urlCupon: urlCupon, urlCaja: urlCaja,
-    lineasCupon: lineasCupon, estadoCupon: estadoCupon, qrSvg: qrSvg,
+    lineasCupon: lineasCupon, estadoCupon: estadoCupon, vigenciaTexto: vigenciaTexto, qrSvg: qrSvg,
     imagenCupon: imagenCupon, descargarCupon: descargarCupon, compartirCupon: compartirCupon,
     toast: toast, copiar: copiar, pintarLogos: pintarLogos
   };
