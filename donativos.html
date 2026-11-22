@@ -347,20 +347,22 @@
     ajustarVence(c);
     return c;
   }
-  // ── Vigencia: "Válido hasta" va, como mínimo, al día siguiente del "Válido desde"
-  //    (o de la fecha del evento si el cupón no tiene su propio inicio) ──
+  // ── Vigencia (ambas fechas cuentan completas):
+  //    · "Válido hasta" se llena solo con el día siguiente al inicio ("Válido desde" o fecha del evento)
+  //    · se puede elegir el MISMO día del inicio para que valga un solo día; nunca antes ──
   function sumarDias(iso, n){
     var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n);
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
   function desdeEf(c){ return c.valido_desde || (ed && ed.fecha_evento) || ''; }
-  function minVence(c){ var d = desdeEf(c); return d ? sumarDias(d, 1) : ''; }
+  function minVence(c){ return desdeEf(c); }                       // mínimo: el mismo día de inicio
+  function venceSugerido(c){ var d = desdeEf(c); return d ? sumarDias(d, 1) : ''; } // por defecto: día siguiente
   // Si el "hasta" se llenó solo (o quedó antes del mínimo), se pone al día siguiente del inicio
   function ajustarVence(c){
     if (c.estado === 'canjeado') return;
     var m = minVence(c);
-    if (c._auto || !c.vence) { c.vence = m; c._auto = true; }
-    else if (m && c.vence < m) { c.vence = m; }
+    if (c._auto || !c.vence) { c.vence = venceSugerido(c); c._auto = true; }
+    else if (m && c.vence < m) { c.vence = venceSugerido(c); }
   }
 
   function abrirEditor(s){
@@ -405,6 +407,7 @@
         '<label class="campo"><span>Válido desde</span><input data-c="valido_desde" type="date" value="' + E(c.valido_desde) + '"></label>' +
         '<label class="campo"><span>Válido hasta</span><input data-c="vence" type="date" value="' + E(c.vence) + '"' + (minVence(c) ? ' min="' + minVence(c) + '"' : '') + '></label>' +
       '</div>' +
+      (c.vence && desdeEf(c) && c.vence === desdeEf(c) ? '<div class="peq" style="margin:-6px 0 10px;color:var(--gold-dark)">Vale <b>un solo día</b>: el ' + E(DON.fecha(c.vence)) + '.</div>' : '') +
       (c.valido_desde ? '' : '<div class="peq" style="margin:-6px 0 10px">Sin "Válido desde", cuenta la <b>fecha del evento</b>' + (ed.fecha_evento ? ' (' + E(DON.fechaCorta(ed.fecha_evento)) + ')' : '') + ': antes no se puede canjear.</div>');
     if (c.tipo === 'monto') {
       h += '<label class="campo"><span>Monto de consumo (una sola visita)</span><input data-c="monto" type="number" inputmode="decimal" min="1" step="1" value="' + E(c.monto) + '" placeholder="500"></label>';
@@ -709,7 +712,7 @@
       if (!String(c.titulo || '').trim()) { DON.toast('El cupón ' + (k + 1) + ' no tiene nombre', true); return; }
       if (c.tipo === 'monto' && !(c.monto > 0)) { DON.toast('"' + c.titulo + '": falta el monto', true); return; }
       var mv = minVence(orig);
-      if (c.vence && mv && c.vence < mv) { DON.toast('"' + c.titulo + '": "Válido hasta" debe ser al menos el ' + DON.fechaCorta(mv), true); return; }
+      if (c.vence && mv && c.vence < mv) { DON.toast('"' + c.titulo + '": "Válido hasta" no puede ser antes del ' + DON.fechaCorta(mv), true); return; }
       if (c.tipo === 'producto' && !c.items.length) { DON.toast('"' + c.titulo + '": agrega al menos un producto', true); return; }
     }
     var b = $('guardar'); b.disabled = true; b.textContent = 'Guardando…';

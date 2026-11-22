@@ -198,6 +198,7 @@
   // "Válido del 5 de diciembre al 31 de enero de 2027" (usa la fecha del evento si no tiene su propio inicio)
   function vigenciaTexto(c) {
     var d = c.desde || c.valido_desde, v = c.vence;
+    if (d && v && String(d).slice(0, 10) === String(v).slice(0, 10)) return 'Válido solo el ' + fecha(v);
     if (d && v) return 'Válido del ' + fecha(d).replace(/ de \d{4}$/, d.slice(0, 4) === String(v).slice(0, 4) ? '' : '$&') + ' al ' + fecha(v);
     if (d) return 'Válido a partir del ' + fecha(d);
     if (v) return 'Válido hasta el ' + fecha(v);
