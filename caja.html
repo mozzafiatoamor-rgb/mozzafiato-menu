@@ -39,6 +39,9 @@
     .listo .big{font-size:3rem}
     .listo h2{margin:6px 0}
     .nota{font-size:.8rem; color:var(--text-soft); line-height:1.5; margin-top:12px}
+    .recordar{margin-top:14px; padding:10px 12px; background:var(--bg); border-radius:10px; border:1px solid var(--line)}
+    .recordar b{display:block; font-size:.8rem; color:var(--gold-dark); margin-bottom:4px}
+    .recordar .normas{font-size:.8rem}
     video{width:100%; border-radius:12px; margin-top:12px; background:#000}
   </style>
 </head>
@@ -148,8 +151,9 @@
         '<div class="meta">Donado a <b>' + E(actual.institucion) + '</b>' + (actual.evento ? ' · ' + E(actual.evento) : '') + '<br>' +
           (c.vence ? 'Válido hasta: <b>' + E(DON.fecha(c.vence)) + '</b><br>' : 'Sin fecha de vencimiento<br>') +
           (c.estado === 'canjeado' ? 'Canjeado el <b>' + E(DON.fechaHora(c.canjeado_en)) + '</b>' + (c.ganador_nombre ? ' por <b>' + E(c.ganador_nombre) + '</b>' : '') + '<br>' : '') +
-          (c.condiciones ? '<i>' + E(c.condiciones) + '</i>' : '') +
-        '</div></div>';
+        '</div>' +
+        '<div class="recordar"><b>Antes de canjear, recuerda:</b>' + DON.normasHtml(c) + '</div>' +
+      '</div>';
     if (ok) {
       h += '<div class="form">' +
         '<label class="campo"><span>Nombre del ganador *</span><input id="g-nombre" autocomplete="off"></label>' +
@@ -157,7 +161,7 @@
         '<label class="campo"><span>Nota (opcional)</span><input id="g-nota" autocomplete="off" placeholder="Mesa, # de cuenta…"></label>' +
         '<button class="btn grande" id="canjear">Canjear cupón</button>' +
         '<div class="err" id="canje-err"></div>' +
-        '<div class="nota">Se canjea completo y una sola vez' + (c.tipo === 'monto' ? ' (si consume menos del monto, no queda saldo)' : '') + '.</div>' +
+        '<div class="nota">Se canjea completo y una sola vez' + (c.tipo === 'monto' ? ' (si consume menos del monto, no queda saldo; si consume más, la diferencia se cobra)' : '') + '. Solo para consumir aquí, no para llevar.</div>' +
       '</div>';
     }
     h += '</div>';
@@ -188,7 +192,8 @@
         '<p><b>' + E(c.folio) + '</b> · ' + E(nombre) + '</p>' +
         '<ul style="text-align:left;display:inline-block;font-family:var(--display);font-size:1.15rem">' +
           DON.lineasCupon(c).map(function(l){ return '<li>' + E(l) + '</li>'; }).join('') + '</ul>' +
-        '<div class="nota">Registra la cuenta como <b>cortesía / donativo</b> y anota el folio <b>' + E(c.folio) + '</b>.</div>' +
+        '<div class="nota">Registra la cuenta como <b>cortesía / donativo</b> y anota el folio <b>' + E(c.folio) + '</b>.<br>' +
+          'Es solo para consumir aquí (no para llevar). Lo que pidan de más a lo que incluye el cupón se cobra normal.</div>' +
         '<button class="btn" id="otro" style="margin-top:16px">Validar otro cupón</button></div></div>';
       $('otro').onclick = function(){ $('resultado').innerHTML = ''; $('folio').value = ''; $('folio').focus(); history.replaceState(null, '', 'caja.html'); };
       DON.toast('Cupón canjeado');

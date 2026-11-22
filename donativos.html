@@ -262,7 +262,8 @@
       'Con mucho gusto Mozzafiato apoya ' + (s.evento ? 'su ' + s.evento : 'su evento') + ' ☕\n\n' +
       'Aquí están los ' + r.total + ' cupón(es) de regalo para su rifa:\n' + DON.urlInstitucion(s.token) + '\n\n' +
       'Desde ese enlace pueden enviarle a cada ganador su cupón por WhatsApp o imprimirlos. ' +
-      'El ganador lo presenta en caja y se canjea una sola vez.\n¡Mucho éxito!';
+      'El ganador lo presenta en caja y se canjea una sola vez, solo para consumir en el restaurante (no aplica para llevar). ' +
+      'Las condiciones completas vienen en cada cupón.\n¡Mucho éxito!';
   }
 
   function abrirDetalle(id){
@@ -353,7 +354,7 @@
     ed.venceDefault = venceSugerido();
     ed.cupones = (ed.cupones || []).map(function(c){
       return { id: c.id, folio: c.folio, estado: c.estado, vencido: c.vencido, ganador_nombre: c.ganador_nombre,
-               tipo: c.tipo, titulo: c.titulo, items: c.items || [], monto: c.monto || '', condiciones: c.condiciones || '',
+               tipo: c.tipo, titulo: c.titulo, items: c.items || [], monto: c.monto || '', condiciones: DON.notaExtra(c),
                vence: c.vence || '', cancelar: c.estado === 'cancelado' };
     });
     if (!ed.cupones.length) ed.cupones.push(cuponVacio(1));
@@ -403,7 +404,7 @@
         }).join('') + '</div>' +
         '<div class="buscador"><input data-buscar placeholder="＋ Agregar producto del menú (escribe para buscar)…" autocomplete="off"><div class="sug" hidden></div></div>';
     }
-    h += '<label class="campo" style="margin-top:10px"><span>Condiciones (salen en el cupón)</span><input data-c="condiciones" value="' + E(c.condiciones) + '"></label>' +
+    h += '<label class="campo" style="margin-top:10px"><span>Nota adicional en el cupón (opcional)</span><input data-c="condiciones" value="' + E(DON.notaExtra(c)) + '" placeholder="Ej. Válido de lunes a viernes"></label>' +
       '<div class="valor">Valor para el reporte: <b data-valor>' + DON.dinero(valorCupon(c)) + '</b></div>' +
     '</div>';
     return h;
@@ -422,6 +423,8 @@
       '<label class="campo"><span>Notas internas</span><textarea data-f="notas">' + E(ed.notas || '') + '</textarea></label></div>' +
       '<div class="seccion"><h3>Cupones (' + ed.cupones.length + ')</h3>' +
         '<div class="peq" style="margin-bottom:10px">Un cupón por cada premio de la rifa. Usa <b>+ Igual</b> para repetir el mismo premio.</div>' +
+        '<details class="card" style="padding:10px 14px;margin-bottom:12px"><summary class="peq" style="cursor:pointer">Condiciones que salen en <b>todos</b> los cupones</summary>' +
+          DON.normasHtml(null) + '</details>' +
         '<div id="lista-cup">' + ed.cupones.map(htmlCupon).join('') + '</div>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
           '<button class="btn sec" id="add-prod">+ Cupón de productos</button>' +

@@ -18,7 +18,23 @@
     logo: 'images/logo.png'
   };
 
-  var CONDICIONES_DEFAULT = 'Válido en una sola visita. No canjeable por efectivo. No acumulable con otras promociones.';
+  // Normas generales: salen SIEMPRE en todos los cupones (imagen, página, caja)
+  var NORMAS = [
+    'Solo para consumir en el restaurante. No aplica para llevar ni a domicilio.',
+    'Se usa una sola vez y completo; no genera saldo para otra visita.',
+    'No canjeable por efectivo ni se da cambio.',
+    'El consumo adicional a lo que incluye el cupón se paga normal.',
+    'No se cambia por otros productos, salvo los marcados "a elegir".',
+    'Válido solo dentro de su vigencia. No acumulable con otras promociones.',
+    'Preséntalo en caja para validarlo antes de pedir tu cuenta.'
+  ];
+  // Texto que antes se guardaba por cupón (ya lo cubren las normas): no se repite
+  var CONDICIONES_VIEJAS = 'Válido en una sola visita. No canjeable por efectivo. No acumulable con otras promociones.';
+  var CONDICIONES_DEFAULT = '';
+  function notaExtra(c) {
+    var t = String((c && c.condiciones) || '').trim();
+    return t && t !== CONDICIONES_VIEJAS ? t : '';
+  }
 
   // ── Mensajes de error legibles ──
   var ERRORES = {
@@ -220,92 +236,109 @@
     try {
       await Promise.all([
         document.fonts.load('64px "Great Vibes"'), document.fonts.load('700 40px "Playfair Display"'),
-        document.fonts.load('28px "Libre Baskerville"'), document.fonts.load('italic 28px "Libre Baskerville"')
+        document.fonts.load('28px "Libre Baskerville"'), document.fonts.load('italic 28px "Libre Baskerville"'),
+        document.fonts.load('700 20px "Libre Baskerville"')
       ]);
     } catch (e) {}
-    var W = 1080, H = 1500;
-    var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-    var x = cv.getContext('2d');
+    var logo = await cargarLogo('#5e4f30');
+    // 1ª pasada: medir el alto · 2ª pasada: dibujar con el alto exacto
+    var medida = document.createElement('canvas'); medida.width = 1080; medida.height = 10;
+    var H = Math.max(1500, Math.ceil(dibujarCupon(medida.getContext('2d'), c, info, logo, null)));
+    var cv = document.createElement('canvas'); cv.width = 1080; cv.height = H;
+    dibujarCupon(cv.getContext('2d'), c, info, logo, H);
+    return cv;
+  }
+
+  // Dibuja el cupón; si H es null solo mide y devuelve el alto necesario
+  function dibujarCupon(x, c, info, logo, H) {
+    var W = 1080, dib = H != null;
     var ORO = '#8b7a52', ORO_OSC = '#5e4f30', TINTA = '#3a3020', SUAVE = '#6b5d3f';
+    function txt(t, yy) { if (dib) x.fillText(t, W / 2, yy); }
 
-    // Fondo
-    var g = x.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#f6f1e6'); g.addColorStop(1, '#ebe3d1');
-    x.fillStyle = g; x.fillRect(0, 0, W, H);
-    // Marco doble
-    x.strokeStyle = ORO; x.lineWidth = 6; x.strokeRect(36, 36, W - 72, H - 72);
-    x.lineWidth = 2; x.strokeRect(54, 54, W - 108, H - 108);
-    // Esquinas
-    [[54, 54], [W - 54, 54], [54, H - 54], [W - 54, H - 54]].forEach(function (p) {
-      x.save(); x.translate(p[0], p[1]); x.rotate(Math.PI / 4); x.fillStyle = ORO; x.fillRect(-9, -9, 18, 18); x.restore();
-    });
-
+    if (dib) {
+      var g = x.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#f6f1e6'); g.addColorStop(1, '#ebe3d1');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      x.strokeStyle = ORO; x.lineWidth = 6; x.strokeRect(36, 36, W - 72, H - 72);
+      x.lineWidth = 2; x.strokeRect(54, 54, W - 108, H - 108);
+      [[54, 54], [W - 54, 54], [54, H - 54], [W - 54, H - 54]].forEach(function (p) {
+        x.save(); x.translate(p[0], p[1]); x.rotate(Math.PI / 4); x.fillStyle = ORO; x.fillRect(-9, -9, 18, 18); x.restore();
+      });
+    }
     x.textAlign = 'center'; x.textBaseline = 'alphabetic';
     var y = 120;
-    var logo = await cargarLogo(ORO_OSC);
     if (logo) {
       var lw = 420, lh = lw * logo.height / logo.width;
-      x.drawImage(logo, (W - lw) / 2, y - 30, lw, lh); y += lh + 60;
+      if (dib) x.drawImage(logo, (W - lw) / 2, y - 30, lw, lh);
+      y += lh + 60;
     } else {
-      x.fillStyle = ORO_OSC; x.font = '96px "Great Vibes", cursive'; x.fillText('Mozzafiato', W / 2, y + 80); y += 150;
+      x.fillStyle = ORO_OSC; x.font = '96px "Great Vibes", cursive'; txt('Mozzafiato', y + 80); y += 150;
     }
-
     x.fillStyle = ORO_OSC; x.font = '92px "Great Vibes", cursive';
-    x.fillText('Cupón de regalo', W / 2, y); y += 28;
-    // separador
-    x.strokeStyle = ORO; x.lineWidth = 2;
-    x.beginPath(); x.moveTo(W / 2 - 160, y); x.lineTo(W / 2 - 20, y); x.moveTo(W / 2 + 20, y); x.lineTo(W / 2 + 160, y); x.stroke();
-    x.save(); x.translate(W / 2, y); x.rotate(Math.PI / 4); x.fillStyle = ORO; x.fillRect(-6, -6, 12, 12); x.restore();
+    txt('Cupón de regalo', y); y += 28;
+    if (dib) {
+      x.strokeStyle = ORO; x.lineWidth = 2;
+      x.beginPath(); x.moveTo(W / 2 - 160, y); x.lineTo(W / 2 - 20, y); x.moveTo(W / 2 + 20, y); x.lineTo(W / 2 + 160, y); x.stroke();
+      x.save(); x.translate(W / 2, y); x.rotate(Math.PI / 4); x.fillStyle = ORO; x.fillRect(-6, -6, 12, 12); x.restore();
+    }
     y += 62;
-
     x.fillStyle = SUAVE; x.font = '600 26px "Libre Baskerville", Georgia, serif';
-    x.fillText(String(c.titulo || '').toUpperCase(), W / 2, y); y += 66;
+    txt(String(c.titulo || '').toUpperCase(), y); y += 66;
 
-    // Contenido
     x.fillStyle = TINTA;
     var lineas = lineasCupon(c);
     var tam = lineas.length > 5 ? 34 : 44;
     x.font = '700 ' + tam + 'px "Playfair Display", Georgia, serif';
     lineas.forEach(function (l) {
-      envolver(x, l, W - 220).forEach(function (s) { x.fillText(s, W / 2, y); y += tam + 16; });
+      envolver(x, l, W - 220).forEach(function (s) { txt(s, y); y += tam + 16; });
     });
     y += 18;
 
-    // QR
     var qs = 330, qx = (W - qs) / 2;
-    x.fillStyle = '#fff'; x.fillRect(qx - 18, y - 18, qs + 36, qs + 36);
-    x.strokeStyle = 'rgba(139,122,82,.45)'; x.lineWidth = 2; x.strokeRect(qx - 18, y - 18, qs + 36, qs + 36);
-    dibujarQr(x, urlCaja(c.folio), qx, y, qs);
+    if (dib) {
+      x.fillStyle = '#fff'; x.fillRect(qx - 18, y - 18, qs + 36, qs + 36);
+      x.strokeStyle = 'rgba(139,122,82,.45)'; x.lineWidth = 2; x.strokeRect(qx - 18, y - 18, qs + 36, qs + 36);
+      dibujarQr(x, urlCaja(c.folio), qx, y, qs);
+    }
     y += qs + 68;
     x.fillStyle = ORO_OSC; x.font = '700 46px "Playfair Display", Georgia, serif';
-    x.fillText(c.folio, W / 2, y); y += 52;
-
+    txt(c.folio, y); y += 52;
     x.fillStyle = SUAVE; x.font = '26px "Libre Baskerville", Georgia, serif';
-    if (c.vence) { x.fillText('Válido hasta el ' + fecha(c.vence), W / 2, y); y += 40; }
-    var cortesia = 'Cortesía para ' + (info.institucion || '') + (info.evento ? ' · ' + info.evento : '');
+    if (c.vence) { txt('Válido hasta el ' + fecha(c.vence), y); y += 40; }
     x.font = 'italic 24px "Libre Baskerville", Georgia, serif';
-    envolver(x, cortesia, W - 220).forEach(function (s) { x.fillText(s, W / 2, y); y += 34; });
+    envolver(x, 'Cortesía para ' + (info.institucion || '') + (info.evento ? ' · ' + info.evento : ''), W - 220)
+      .forEach(function (s) { txt(s, y); y += 34; });
 
-    // Pie
-    var pieY = H - 150;
-    x.fillStyle = SUAVE; x.font = '20px "Libre Baskerville", Georgia, serif';
-    var cond = (c.condiciones || CONDICIONES_DEFAULT) + ' Presenta este cupón en caja.';
-    var cl = envolver(x, cond, W - 240);
-    var cy = pieY - (cl.length - 1) * 28;
-    cl.forEach(function (s) { x.fillText(s, W / 2, cy); cy += 28; });
+    // Normas (siempre)
+    y += 34;
+    if (dib) { x.strokeStyle = 'rgba(139,122,82,.5)'; x.lineWidth = 1; x.beginPath(); x.moveTo(140, y - 30); x.lineTo(W - 140, y - 30); x.stroke(); }
+    x.fillStyle = ORO_OSC; x.font = '700 21px "Libre Baskerville", Georgia, serif';
+    txt('CONDICIONES', y); y += 36;
+    x.fillStyle = SUAVE; x.font = '21px "Libre Baskerville", Georgia, serif';
+    var normas = NORMAS.slice();
+    var extra = notaExtra(c); if (extra) normas.push(extra);
+    normas.forEach(function (n) {
+      envolver(x, '• ' + n, W - 220).forEach(function (s) { txt(s, y); y += 30; });
+    });
+    y += 30;
     x.fillStyle = ORO; x.font = '19px "Libre Baskerville", Georgia, serif';
-    x.fillText(MOZZA.dir, W / 2, H - 90);
+    txt(MOZZA.dir, y); y += 80;
 
-    // Sello si ya no es válido
     var est = estadoCupon(c);
-    if (est.clave !== 'activo') {
-      x.save(); x.translate(W / 2, H / 2 + 40); x.rotate(-0.32);
+    if (dib && est.clave !== 'activo') {
+      x.save(); x.translate(W / 2, H * 0.45); x.rotate(-0.32);
       x.strokeStyle = 'rgba(165,72,47,.85)'; x.lineWidth = 10; x.strokeRect(-330, -80, 660, 160);
       x.fillStyle = 'rgba(165,72,47,.9)'; x.font = '700 96px "Playfair Display", Georgia, serif';
       x.textBaseline = 'middle'; x.fillText(est.texto.toUpperCase(), 0, 6);
       x.restore();
     }
-    return cv;
+    return y;
+  }
+
+  // HTML con las normas (para páginas)
+  function normasHtml(c, clase) {
+    var n = NORMAS.slice(); var extra = c ? notaExtra(c) : ''; if (extra) n.push(extra);
+    return '<ul class="' + (clase || 'normas') + '">' + n.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
   }
 
   function canvasBlob(cv) { return new Promise(function (res) { cv.toBlob(res, 'image/png'); }); }
@@ -360,7 +393,7 @@
   }
 
   global.DON = {
-    MOZZA: MOZZA, CONDICIONES_DEFAULT: CONDICIONES_DEFAULT,
+    MOZZA: MOZZA, CONDICIONES_DEFAULT: CONDICIONES_DEFAULT, NORMAS: NORMAS, notaExtra: notaExtra, normasHtml: normasHtml,
     rpc: rpc, login: login, logout: logout, getSesion: getSesion, tokenVigente: tokenVigente,
     textoError: textoError, dinero: dinero, fecha: fecha, fechaCorta: fechaCorta, fechaHora: fechaHora,
     hoyISO: hoyISO, esc: esc, telWa: telWa, waLink: waLink,
