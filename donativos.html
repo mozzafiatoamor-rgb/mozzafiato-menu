@@ -617,7 +617,7 @@
         if (!o.none) partes.push(o.n);
       }
     });
-    var nombre = todoElegir ? prod.nombre + ' (a elegir)' : prod.nombre + ': ' + partes.join(', ');
+    var nombre = todoElegir ? prod.nombre + ' (a elegir)' : partes.length ? prod.nombre + ': ' + partes.join(', ') : prod.nombre + ' sencillo';
     return { nombre: nombre, precio: precio };
   }
   function abrirArmador(el, i, prod){

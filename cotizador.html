@@ -681,6 +681,7 @@
       case 'smoothie':return `Smoothie ${g('sabor').n} (base ${g('base').n.toLowerCase()})`;
       case 'waffle':  return `${g('forma').n} ${g('variante').n}`;
       case 'agua':    return `Agua fresca de ${g('sabor').n} (${g('tipo').n.toLowerCase()})`;
+      case 'mollete': return 'Mollete' + (sel.extra && !sel.extra.none ? ' con ' + sel.extra.n.toLowerCase() : ' sencillo');
       default:        return c.label;
     }
   }

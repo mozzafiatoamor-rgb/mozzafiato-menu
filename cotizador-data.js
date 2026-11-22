@@ -451,6 +451,21 @@ const COTIZADOR_MENU = [
     "price": 99
   },
   {
+    "name": "Pan brioche con mermelada y mantequilla",
+    "cat": "Complementos",
+    "price": 69
+  },
+  {
+    "name": "Croissant con mermelada y mantequilla",
+    "cat": "Complementos",
+    "price": 79
+  },
+  {
+    "name": "Cóctel de frutas con yogurt griego y granola",
+    "cat": "Desayunos",
+    "price": 99
+  },
+  {
     "name": "Pollo (160 gr)",
     "cat": "Ingredientes extra",
     "price": 70
@@ -972,6 +987,37 @@ const COTIZADOR_COMBOS = [
           {
             "n": "Mix frutos rojos",
             "p": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "mollete",
+    "cat": "Molletes",
+    "label": "Mollete (ingrediente extra)",
+    "from": 179,
+    "groups": [
+      {
+        "key": "extra",
+        "label": "Ingrediente extra",
+        "options": [
+          {
+            "n": "Sencillo",
+            "p": 179,
+            "none": true
+          },
+          {
+            "n": "Chorizo",
+            "p": 189
+          },
+          {
+            "n": "Tocino",
+            "p": 199
+          },
+          {
+            "n": "Arrachera",
+            "p": 219
           }
         ]
       }
