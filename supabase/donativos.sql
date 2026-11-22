@@ -271,12 +271,15 @@ begin
   return jsonb_build_object('id', sid);
 end $$;
 
--- ADMIN: borrar una solicitud completa (solo si ningún cupón fue canjeado)
-create or replace function public.don_borrar_solicitud(p_id uuid) returns void
+-- ADMIN: borrar una solicitud completa con sus cupones.
+-- Si ya tiene cupones canjeados, solo se borra con p_forzar = true (se pierden del reporte).
+drop function if exists public.don_borrar_solicitud(uuid);
+create or replace function public.don_borrar_solicitud(p_id uuid, p_forzar boolean default false) returns void
 language plpgsql volatile security definer set search_path = donativos, public as $$
 begin
   perform donativos._exigir_admin();
-  if exists (select 1 from donativos.cupones where solicitud_id = p_id and estado = 'canjeado') then
+  if not coalesce(p_forzar, false)
+     and exists (select 1 from donativos.cupones where solicitud_id = p_id and estado = 'canjeado') then
     raise exception 'TIENE_CANJEADOS';
   end if;
   delete from donativos.solicitudes where id = p_id;
@@ -377,7 +380,7 @@ end $$;
 -- ---------- Permisos de las funciones ----------
 revoke execute on function
   public.don_es_admin(), public.don_listar(), public.don_guardar_solicitud(jsonb),
-  public.don_borrar_solicitud(uuid), public.don_deshacer_canje(text), public.don_set_pin_caja(text),
+  public.don_borrar_solicitud(uuid, boolean), public.don_deshacer_canje(text), public.don_set_pin_caja(text),
   public.don_hay_pin_caja(), public.don_ver_solicitud(text), public.don_ver_cupon(text),
   public.don_caja_pin_ok(text), public.don_caja_consultar(text, text),
   public.don_caja_canjear(text, text, text, text, text)
@@ -386,7 +389,7 @@ from public;
 -- Admin: requiere sesión (y además estar en donativos.admins)
 grant execute on function
   public.don_es_admin(), public.don_listar(), public.don_guardar_solicitud(jsonb),
-  public.don_borrar_solicitud(uuid), public.don_deshacer_canje(text), public.don_set_pin_caja(text),
+  public.don_borrar_solicitud(uuid, boolean), public.don_deshacer_canje(text), public.don_set_pin_caja(text),
   public.don_hay_pin_caja()
 to authenticated;
 

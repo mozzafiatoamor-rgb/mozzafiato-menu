@@ -313,9 +313,10 @@
     $('copiar-link').onclick = function(){ DON.copiar(link); };
     $('editar').onclick = function(){ abrirEditor(s); };
     $('borrar').onclick = async function(){
-      if (r.canj) { DON.toast('No se puede borrar: ya tiene cupones canjeados.', true); return; }
-      if (!confirm('¿Borrar la solicitud de "' + s.institucion + '" y sus ' + r.total + ' cupones? El link dejará de funcionar.')) return;
-      try { await llamar('don_borrar_solicitud', { p_id: s.id }); cerrarPanel(); DON.toast('Solicitud borrada'); await recargar(); }
+      var n = (s.cupones || []).length;
+      if (!confirm('¿Borrar la solicitud de "' + s.institucion + '" y sus ' + n + ' cupones?\n\nEl link de la institución y los cupones dejarán de funcionar. No se puede deshacer.')) return;
+      if (r.canj && !confirm('Ojo: ' + r.canj + ' cupón(es) ya fueron CANJEADOS. Si la borras, esos canjes y sus ganadores también desaparecen del reporte.\n\n¿Borrar de todas formas?')) return;
+      try { await llamar('don_borrar_solicitud', { p_id: s.id, p_forzar: r.canj > 0 }); cerrarPanel(); DON.toast('Solicitud borrada'); await recargar(); }
       catch (e) { DON.toast(DON.textoError(e), true); }
     };
     p.querySelectorAll('[data-img]').forEach(function(b){
