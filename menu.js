@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') lb?.classList.remove('open'); });
 });
 
-/* ── Acceso oculto al cotizador: 3 toques rápidos en el logo ── */
+/* ── Acceso oculto al panel administrativo (cotizador, donativos, caja): 3 toques rápidos en el logo ── */
 document.addEventListener('DOMContentLoaded', function () {
   var logos = document.querySelectorAll('.cover-logo, .sidebar-logo img');
   var taps = 0, timer = null;
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
       taps++;
       clearTimeout(timer);
       timer = setTimeout(function () { taps = 0; }, 1200); /* reinicia si tardas >1.2s entre toques */
-      if (taps >= 3) { taps = 0; clearTimeout(timer); window.location.href = 'cotizador.html'; }
+      if (taps >= 3) { taps = 0; clearTimeout(timer); window.location.href = 'admin.html'; }
     });
   });
 });

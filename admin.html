@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mozzafiato · Panel administrativo</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#3a3020">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="donativos.css">
+  <style>
+    main{max-width:560px; margin:0 auto; padding:34px 18px 60px; text-align:center}
+    .logo{width:230px; max-width:70%}
+    h1{font-family:var(--script); font-weight:normal; font-size:2.4rem; margin:14px 0 2px}
+    .sub{font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:var(--gold); margin-bottom:26px}
+    .accesos{display:grid; gap:12px; text-align:left}
+    .acceso{display:flex; align-items:center; gap:16px; padding:18px; text-decoration:none; color:var(--text);
+      transition:transform .1s, box-shadow .1s}
+    .acceso:hover{transform:translateY(-1px); box-shadow:0 14px 32px rgba(58,48,32,.16)}
+    .acceso .ico{flex:0 0 52px; height:52px; border-radius:14px; background:var(--footer-bg); color:var(--gold-light);
+      display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:1.5rem; font-weight:700}
+    .acceso .t{font-family:var(--display); font-weight:700; font-size:1.15rem; color:var(--gold-dark)}
+    .acceso .d{font-size:.82rem; color:var(--text-soft); margin-top:3px; line-height:1.45}
+    .acceso .flecha{margin-left:auto; color:var(--gold); font-size:1.3rem}
+    .volver{display:inline-block; margin-top:26px; font-size:.85rem}
+    .nota{font-size:.75rem; color:var(--text-soft); margin-top:18px; line-height:1.5}
+  </style>
+</head>
+<body>
+  <main>
+    <img class="logo" data-logo="#5e4f30" alt="Mozzafiato">
+    <h1>Panel administrativo</h1>
+    <div class="sub">Herramientas internas</div>
+
+    <div class="accesos">
+      <a class="card acceso" href="cotizador.html">
+        <span class="ico">$</span>
+        <span><div class="t">Cotizador</div><div class="d">Cotizaciones de eventos y servicios con precios del menú, PDF y WhatsApp.</div></span>
+        <span class="flecha">›</span>
+      </a>
+      <a class="card acceso" href="donativos.html">
+        <span class="ico">♥</span>
+        <span><div class="t">Donativos</div><div class="d">Solicitudes de escuelas e instituciones, cupones de regalo y reporte de lo donado.</div></span>
+        <span class="flecha">›</span>
+      </a>
+      <a class="card acceso" href="caja.html">
+        <span class="ico">✓</span>
+        <span><div class="t">Caja · Cupones</div><div class="d">Validar y canjear cupones de regalo (pide el PIN de caja).</div></span>
+        <span class="flecha">›</span>
+      </a>
+    </div>
+
+    <p class="nota">Cada herramienta pide su propio acceso. Para entrar rápido, guarda esta página en la pantalla de inicio del celular.</p>
+    <a class="volver" href="index.html">← Volver al menú</a>
+  </main>
+<script src="vendor/qrcode.js"></script>
+<script src="donativos-comun.js"></script>
+<script>DON.pintarLogos();</script>
+</body>
+</html>
